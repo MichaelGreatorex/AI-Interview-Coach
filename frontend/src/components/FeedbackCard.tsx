@@ -11,7 +11,7 @@ export default function FeedbackCard({
   weaknesses,
   idealAnswer,
 }: FeedbackCardProps) {
-  const colour =
+  const color =
     score >= 8
       ? "text-emerald-600"
       : score >= 5
@@ -21,7 +21,7 @@ export default function FeedbackCard({
   return (
     <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 space-y-4 text-sm">
       <div className="flex items-center gap-3">
-        <span className={`text-2xl font-bold ${colour}`}>{score}/10</span>
+        <span className={`text-2xl font-bold ${color}`}>{score}/10</span>
         <span className="text-zinc-500">AI feedback</span>
       </div>
 

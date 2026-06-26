@@ -64,9 +64,10 @@ export default function InterviewPage() {
       if (res.interview_complete) {
         setStatus("complete");
       } else if (res.next_question) {
+        const nextQuestion = res.next_question;
         setMessages((prev) => [
           ...prev,
-          { role: "interviewer", content: res.next_question! },
+          { role: "interviewer", content: nextQuestion },
         ]);
       }
     } catch (err) {
