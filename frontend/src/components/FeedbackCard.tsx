@@ -29,8 +29,8 @@ export default function FeedbackCard({
         <div>
           <p className="font-semibold text-emerald-700 mb-1">✅ Strengths</p>
           <ul className="list-disc list-inside space-y-1 text-zinc-700">
-            {strengths.map((s, i) => (
-              <li key={i}>{s}</li>
+            {strengths.map((s) => (
+              <li key={s}>{s}</li>
             ))}
           </ul>
         </div>
@@ -40,8 +40,8 @@ export default function FeedbackCard({
         <div>
           <p className="font-semibold text-amber-600 mb-1">⚠️ Areas to improve</p>
           <ul className="list-disc list-inside space-y-1 text-zinc-700">
-            {weaknesses.map((w, i) => (
-              <li key={i}>{w}</li>
+            {weaknesses.map((w) => (
+              <li key={w}>{w}</li>
             ))}
           </ul>
         </div>

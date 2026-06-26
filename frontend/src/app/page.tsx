@@ -49,7 +49,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step) => (
               <div
-                key={step.number}
+                key={step.title}
                 className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 text-xl font-bold">

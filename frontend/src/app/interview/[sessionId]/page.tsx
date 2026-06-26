@@ -8,6 +8,7 @@ import { startInterview, submitAnswer } from "@/lib/api";
 import type { AnswerResponse } from "@/lib/api";
 
 interface Message {
+  id: string;
   role: "interviewer" | "user" | "feedback";
   content: string;
   feedback?: AnswerResponse["feedback"];
@@ -15,8 +16,14 @@ interface Message {
 
 type InterviewStatus = "loading" | "active" | "complete" | "error";
 
+let messageCounter = 0;
+function nextId() {
+  return `msg-${++messageCounter}`;
+}
+
 export default function InterviewPage() {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const params = useParams<{ sessionId: string }>();
+  const sessionId = params?.sessionId ?? "";
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<InterviewStatus>("loading");
@@ -25,10 +32,15 @@ export default function InterviewPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!sessionId) {
+      setErrorMessage("Invalid session — no session ID found in the URL.");
+      setStatus("error");
+      return;
+    }
     async function init() {
       try {
         const res = await startInterview(sessionId);
-        setMessages([{ role: "interviewer", content: res.question }]);
+        setMessages([{ id: nextId(), role: "interviewer", content: res.question }]);
         setStatus("active");
       } catch (err) {
         setErrorMessage(
@@ -50,14 +62,17 @@ export default function InterviewPage() {
 
     setInput("");
     setSubmitting(true);
-    setMessages((prev) => [...prev, { role: "user", content: answer }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: nextId(), role: "user", content: answer },
+    ]);
 
     try {
       const res = await submitAnswer(sessionId, answer);
 
       setMessages((prev) => [
         ...prev,
-        { role: "feedback", content: "", feedback: res.feedback },
+        { id: nextId(), role: "feedback", content: "", feedback: res.feedback },
       ]);
 
       if (res.interview_complete) {
@@ -66,13 +81,14 @@ export default function InterviewPage() {
         const nextQuestion = res.next_question;
         setMessages((prev) => [
           ...prev,
-          { role: "interviewer", content: nextQuestion },
+          { id: nextId(), role: "interviewer", content: nextQuestion },
         ]);
       }
     } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
+          id: nextId(),
           role: "interviewer",
           content:
             err instanceof Error
@@ -138,10 +154,10 @@ export default function InterviewPage() {
       {/* Message thread */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="mx-auto max-w-3xl space-y-4">
-          {messages.map((msg, i) => {
+          {messages.map((msg) => {
             if (msg.role === "feedback" && msg.feedback) {
               return (
-                <div key={i} className="mx-2">
+                <div key={msg.id} className="mx-2">
                   <FeedbackCard
                     score={msg.feedback.score}
                     strengths={msg.feedback.strengths}
@@ -155,7 +171,7 @@ export default function InterviewPage() {
             const isUser = msg.role === "user";
             return (
               <div
-                key={i}
+                key={msg.id}
                 className={`flex ${isUser ? "justify-end" : "justify-start"}`}
               >
                 <div
