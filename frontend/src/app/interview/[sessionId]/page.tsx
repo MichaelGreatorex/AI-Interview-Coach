@@ -44,8 +44,7 @@ export default function InterviewPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function sendAnswer() {
     const answer = input.trim();
     if (!answer || submitting) return;
 
@@ -84,6 +83,11 @@ export default function InterviewPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    sendAnswer();
   }
 
   if (status === "loading") {
@@ -211,7 +215,7 @@ export default function InterviewPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  handleSubmit(e as unknown as React.FormEvent);
+                  sendAnswer();
                 }
               }}
               placeholder="Type your answer… (Enter to send, Shift+Enter for new line)"
