@@ -35,7 +35,7 @@ export default function Home() {
                 href="/upload"
                 className="rounded-full bg-zinc-900 px-7 py-3 text-sm font-semibold text-white shadow hover:bg-zinc-700 transition-colors"
               >
-                Start practising →
+                Start practicing →
               </Link>
             </div>
           </div>
