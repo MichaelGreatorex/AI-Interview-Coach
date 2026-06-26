@@ -16,11 +16,6 @@ interface Message {
 
 type InterviewStatus = "loading" | "active" | "complete" | "error";
 
-let messageCounter = 0;
-function nextId() {
-  return `msg-${++messageCounter}`;
-}
-
 export default function InterviewPage() {
   const params = useParams<{ sessionId: string }>();
   const sessionId = params?.sessionId ?? "";
@@ -40,7 +35,7 @@ export default function InterviewPage() {
     async function init() {
       try {
         const res = await startInterview(sessionId);
-        setMessages([{ id: nextId(), role: "interviewer", content: res.question }]);
+        setMessages([{ id: crypto.randomUUID(), role: "interviewer", content: res.question }]);
         setStatus("active");
       } catch (err) {
         setErrorMessage(
@@ -64,7 +59,7 @@ export default function InterviewPage() {
     setSubmitting(true);
     setMessages((prev) => [
       ...prev,
-      { id: nextId(), role: "user", content: answer },
+      { id: crypto.randomUUID(), role: "user", content: answer },
     ]);
 
     try {
@@ -72,7 +67,7 @@ export default function InterviewPage() {
 
       setMessages((prev) => [
         ...prev,
-        { id: nextId(), role: "feedback", content: "", feedback: res.feedback },
+        { id: crypto.randomUUID(), role: "feedback", content: "", feedback: res.feedback },
       ]);
 
       if (res.interview_complete) {
@@ -81,14 +76,14 @@ export default function InterviewPage() {
         const nextQuestion = res.next_question;
         setMessages((prev) => [
           ...prev,
-          { id: nextId(), role: "interviewer", content: nextQuestion },
+          { id: crypto.randomUUID(), role: "interviewer", content: nextQuestion },
         ]);
       }
     } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
-          id: nextId(),
+          id: crypto.randomUUID(),
           role: "interviewer",
           content:
             err instanceof Error
