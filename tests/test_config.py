@@ -7,8 +7,17 @@ def test_settings_parse_comma_separated_allowed_origins() -> None:
     assert settings.allowed_origins == ["http://localhost:3000", "https://example.com"]
 
 
-def test_settings_convert_empty_strings_to_none() -> None:
-    settings = Settings(openai_api_key="", s3_bucket_name="   ", database_url="")
+def test_settings_convert_empty_strings_to_none_without_database_config() -> None:
+    settings = Settings(
+        openai_api_key="",
+        s3_bucket_name="   ",
+        database_url="",
+        database_host=None,
+        database_port=None,
+        database_name=None,
+        database_user=None,
+        database_password=None,
+    )
 
     assert settings.openai_api_key is None
     assert settings.s3_bucket_name is None
