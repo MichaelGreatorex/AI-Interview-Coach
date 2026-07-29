@@ -24,7 +24,8 @@ jobs:
         run: docker compose up -d postgres
 
       - name: Apply database migrations
-        run: docker compose run --rm backend /bin/sh -c "env -u DATABASE_URL -u DATABASE_HOST -u DATABASE_PORT -u DATABASE_NAME -u DATABASE_USER -u DATABASE_PASSWORD alembic upgrade head" 
+        run: docker compose run --rm backend \
+          alembic upgrade head
       
       - name: Run backend tests
         run: |
