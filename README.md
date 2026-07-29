@@ -128,6 +128,8 @@ Automated deployment via GitHub Actions:
 - FastAPI `0.138.2`
 - Pydantic `2.13.4`
 - Pydantic Settings `2.11.0`
+- SQLAlchemy `2.0.51`
+- Alembic `1.18.5`
 - Uvicorn `0.32.1`
 - python-multipart `0.0.30`
 - pytest `9.1.1`
@@ -235,6 +237,43 @@ source .venv/bin/activate
 python -m pytest -vv ../tests
 ```
 
+### Database Migrations (Alembic)
+
+The backend uses Alembic for database schema migrations.
+
+#### Prerequisites
+
+- Docker Compose is running the Postgres service
+- The backend container has access to the database URL from `backend/.env` or the container environment
+
+#### Run migrations from the backend container
+
+```bash
+docker compose exec backend sh -lc 'cd /app && alembic current'
+docker compose exec backend sh -lc 'cd /app && alembic revision --autogenerate -m "describe your change"'
+docker compose exec backend sh -lc 'cd /app && alembic upgrade head'
+```
+
+#### Run migrations from the local backend environment
+
+```bash
+cd backend
+source .venv/bin/activate
+export DATABASE_URL=postgresql://ai_interview:ai_interview_dev_password@127.0.0.1:5432/ai_interview_coach
+alembic current
+alembic revision --autogenerate -m "describe your change"
+alembic upgrade head
+```
+
+#### Common migration commands
+
+```bash
+alembic history
+alembic downgrade -1
+```
+
+The migration configuration lives in `backend/alembic.ini` and the migration scripts live in `backend/alembic/versions/`.
+
 ### Test Suite Coverage
 
 The backend test suite currently validates configuration behavior, basic API health behavior, and API route wiring.
@@ -294,12 +333,14 @@ npm run build
 ## Project Structure
 
 ```text
-/frontend   -> Next.js UI
-/backend    -> FastAPI server
-/infra      -> Docker + CI/CD configs
-/prompts    -> LLM prompt templates
-/tests      -> Unit + integration tests
-/docs       -> Architecture decisions
+/frontend           -> Next.js UI
+/backend           -> FastAPI server
+/backend/app/models -> SQLAlchemy models
+/backend/alembic   -> Alembic migration configuration and scripts
+/infra             -> Docker + CI/CD configs
+/prompts           -> LLM prompt templates
+/tests             -> Unit + integration tests
+/docs              -> Architecture decisions
 ```
 
 ---

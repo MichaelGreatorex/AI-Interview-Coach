@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import importlib
 from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import DateTime, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.session import Base
+from backend.app.models.interview_document import InterviewDocument
+
+session_module = importlib.import_module("app.db.session")
+Base = session_module.Base
+documents: Mapped[list["InterviewDocument"]] = relationship("InterviewDocument", back_populates="session")
 
 
 class InterviewSession(Base):
