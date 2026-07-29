@@ -13,6 +13,7 @@ if str(BACKEND_DIR) not in sys.path:
 
 from app.core.config import settings
 from app.db.session import Base
+import app.models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

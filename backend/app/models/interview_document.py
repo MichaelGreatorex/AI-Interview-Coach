@@ -1,39 +1,60 @@
 from __future__ import annotations
 
-import importlib
 from datetime import datetime, timezone
-from typing import Optional
-from app.models.enums import DocumentType
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from backend.app.models.interview_session import InterviewSession
+from app.db.session import Base
+from app.models.enums import DocumentType
 
-session_module = importlib.import_module("app.db.session")
-Base = session_module.Base
-session: Mapped["InterviewSession"] = relationship("InterviewSession", back_populates="documents")
+if TYPE_CHECKING:
+    from app.models.interview_session import InterviewSession
 
 
 class InterviewDocument(Base):
     __tablename__ = "interview_documents"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    session_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    document_type: Mapped[Optional[DocumentType]] = mapped_column(String(50), nullable=True, index=True)  # Should use DocumentType enum
-    original_filename: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    interview_session_id: Mapped[int] = mapped_column(
+        ForeignKey("interview_sessions.id"),
+        nullable=False,
+        index=True,
+    )
+
+    document_type: Mapped[DocumentType] = mapped_column(
+    Enum(
+        DocumentType,
+        values_callable=lambda enum: [e.value for e in enum],
+    ),
+    nullable=False,
+)
+
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+
     stored_filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    mime_type: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    file_size: Mapped[Optional[int]] = mapped_column(nullable=True)
-    storage_path: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    file_size: Mapped[int] = mapped_column(nullable=False)
+
+    storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
         default=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    session: Mapped["InterviewSession"] = relationship(
+        back_populates="documents",
     )

@@ -246,12 +246,18 @@ The backend uses Alembic for database schema migrations.
 - Docker Compose is running the Postgres service
 - The backend container has access to the database URL from `backend/.env` or the container environment
 
+### Generate migration (example command)
+
+```bash
+docker compose run --rm backend \
+    alembic revision --autogenerate -m "initial schema"
+```
+
 #### Run migrations from the backend container
 
 ```bash
-docker compose exec backend sh -lc 'cd /app && alembic current'
-docker compose exec backend sh -lc 'cd /app && alembic revision --autogenerate -m "describe your change"'
-docker compose exec backend sh -lc 'cd /app && alembic upgrade head'
+docker compose run --rm backend alembic upgrade head
+docker compose run --rm backend alembic current
 ```
 
 #### Run migrations from the local backend environment
