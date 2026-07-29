@@ -246,6 +246,10 @@ The backend uses Alembic for database schema migrations.
 - Docker Compose is running the Postgres service
 - The backend container has access to the database URL from `backend/.env` or the container environment
 
+#### First model note
+
+The initial SQLAlchemy model is defined at `backend/app/models/interview_session.py` and is mapped to the `interview_sessions` table via Alembic.
+
 ### Generate migration (example command)
 
 ```bash
