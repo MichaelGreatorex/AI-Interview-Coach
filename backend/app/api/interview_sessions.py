@@ -1,21 +1,18 @@
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from typing import Annotated
 
-from app.db.session import get_db
-from app.repositories.interview_session_repository import (
-    InterviewSessionRepository,
-)
+from app.api.dependencies import get_interview_session_service, InterviewSessionServiceDependency
 from app.schemas.interview_session import (
     CreateInterviewSessionRequest,
     InterviewSessionCreatedResponse,
     InterviewSessionResponse,
 )
+
 from app.services.interview_session_service import (
     InterviewSessionService,
 )
 
 router = APIRouter(prefix="/api/v1/interview-sessions", tags=["Interview Sessions"])
-
 
 @router.post(
     "",
@@ -24,12 +21,8 @@ router = APIRouter(prefix="/api/v1/interview-sessions", tags=["Interview Session
 )
 def create_interview_session(
     request: CreateInterviewSessionRequest,
-    db: Session = Depends(get_db),
-) -> InterviewSessionCreatedResponse:
-
-    repository = InterviewSessionRepository(db)
-    service = InterviewSessionService(repository)
-
+    service: InterviewSessionServiceDependency,
+):
     interview_session = service.create_session(request)
 
     return InterviewSessionCreatedResponse(
