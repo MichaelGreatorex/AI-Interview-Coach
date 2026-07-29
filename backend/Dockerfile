@@ -12,7 +12,8 @@ COPY requirements-dev.txt ./
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
 COPY pytest.ini ./
-
+COPY alembic.ini ./
+COPY alembic ./alembic
 COPY app ./app
 RUN chown -R appuser:appuser /app
 
