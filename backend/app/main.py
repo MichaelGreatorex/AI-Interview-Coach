@@ -4,10 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import settings
 
-from app.api import interview_sessions
-
-
-
 def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
@@ -24,7 +20,6 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix="/api/v1")
-    app.include_router(interview_sessions.router)
 
     return app
 

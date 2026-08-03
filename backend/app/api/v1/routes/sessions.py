@@ -1,10 +1,26 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 
-from app.api.v1.routes._placeholders import not_implemented
+from app.api.dependencies import InterviewSessionServiceDependency
+from app.schemas.interview_session import (
+    CreateInterviewSessionRequest,
+    InterviewSessionCreatedResponse,
+    InterviewSessionResponse,
+)
 
-router = APIRouter()
+router = APIRouter(tags=["Interview Sessions"])
 
 
-@router.get("/{session_id}", tags=["sessions"])
-async def get_session(session_id: str) -> dict:
-    not_implemented(f"sessions.get:{session_id}")
+@router.post(
+    "",
+    response_model=InterviewSessionCreatedResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_interview_session(
+    request: CreateInterviewSessionRequest,
+    service: InterviewSessionServiceDependency,
+) -> InterviewSessionCreatedResponse:
+    interview_session = service.create_session(request)
+
+    return InterviewSessionCreatedResponse(
+        session=InterviewSessionResponse.model_validate(interview_session)
+    )
