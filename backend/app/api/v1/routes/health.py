@@ -3,6 +3,6 @@ from fastapi import APIRouter
 router = APIRouter()
 
 
-@router.get("/health", tags=["health"])
+@router.get("/health", tags=["Health Check"])
 async def health_check() -> dict:
     return {"status": "ok"}

@@ -1,25 +1,22 @@
 from typing import Annotated
-
 from fastapi import Depends
 from sqlalchemy.orm import Session
-
 from app.db.session import get_db
+
 from app.repositories.interview_session_repository import (
     InterviewSessionRepository,
 )
-from app.services.interview_session_service import (
-    InterviewSessionService,
-)
-
 from app.repositories.interview_document_repository import (
     InterviewDocumentRepository,
 )
 
+from app.services.interview_session_service import (
+    InterviewSessionService,
+)
 from app.services.document_service import DocumentService
 
 from app.storage.local_provider import LocalStorageProvider
 from app.storage.provider import StorageProvider
-
 
 def get_interview_session_repository(
     db: Session = Depends(get_db),
@@ -34,14 +31,12 @@ def get_interview_document_repository(
 def get_storage_provider() -> StorageProvider:
     return LocalStorageProvider()
 
-
 def get_interview_session_service(
     repository: InterviewSessionRepository = Depends(
         get_interview_session_repository,
     ),
 ) -> InterviewSessionService:
     return InterviewSessionService(repository)
-
 
 InterviewSessionServiceDependency = Annotated[
     InterviewSessionService,
