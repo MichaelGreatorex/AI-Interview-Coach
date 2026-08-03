@@ -12,11 +12,11 @@ export type InterviewStage =
   | "complete";
 
 export default function InterviewApp() {
-  const [stage] = useState<InterviewStage>("upload");
+  const [stage, setStage] = useState<InterviewStage>("upload");
 
   switch (stage) {
     case "upload":
-      return <UploadView />;
+      return <UploadView onStartInterview={() => setStage("interview")} />;
 
     case "interview":
       return <InterviewView />;

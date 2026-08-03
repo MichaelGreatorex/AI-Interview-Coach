@@ -2,7 +2,13 @@ import { useState } from "react";
 
 import FileUploadCard from "./FileUploadCard";
 
-export default function UploadView() {
+type UploadViewProps = {
+  onStartInterview: () => void;
+};
+
+export default function UploadView({
+  onStartInterview,
+}: UploadViewProps) {
   const [cv, setCv] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState<File | null>(null);
 
@@ -42,6 +48,7 @@ export default function UploadView() {
         <div className="mt-10 text-center">
           <button
             disabled={!canStart}
+            onClick={onStartInterview}
             className="rounded-xl bg-blue-600 px-8 py-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-foreground/10 disabled:text-foreground/50"
           >
             Start Interview
