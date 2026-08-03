@@ -9,7 +9,7 @@ client = TestClient(app)
 
 def test_create_interview_session_returns_201():
     response = client.post(
-        "/api/v1/interview-sessions",
+        "/api/v1/sessions",
         json={},
     )
 
@@ -31,7 +31,7 @@ def test_create_interview_session_returns_201():
     
 def test_create_interview_session_with_candidate_name_and_job_title_returns_201():
     response = client.post(
-        "/api/v1/interview-sessions",
+        "/api/v1/sessions",
         json={"candidate_name": "John Doe", "job_title": "Software Engineer"},
     )
 

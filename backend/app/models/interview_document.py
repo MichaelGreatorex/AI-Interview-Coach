@@ -25,11 +25,11 @@ class InterviewDocument(Base):
     )
 
     document_type: Mapped[DocumentType] = mapped_column(
-    Enum(
-        DocumentType,
-        values_callable=lambda enum: [e.value for e in enum],
-    ),
-    nullable=False,
+        Enum(
+            DocumentType,
+            values_callable=lambda enum: [e.value for e in enum],
+        ),
+        nullable=False,
 )
 
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
