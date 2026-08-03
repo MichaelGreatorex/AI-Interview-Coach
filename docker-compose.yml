@@ -81,13 +81,16 @@ services:
   frontend:
     build:
       context: ./frontend
-
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     container_name: ai-interview-coach-frontend
     restart: unless-stopped
 
     environment:
       API_BASE_URL: http://backend:8000
       NODE_ENV: development
+      WATCHPACK_POLLING: "true"
 
     depends_on:
       backend:
