@@ -1,63 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { interviewQuestions } from "../types/interview";
+import { useInterview } from "../hooks/useInterview";
 
 import UploadView from "./UploadView";
 import InterviewView from "./InterviewView";
 import CompleteView from "./CompleteView";
 
-export type InterviewStage =
-  | "upload"
-  | "interview"
-  | "complete";
-
 export default function InterviewApp() {
-  const [stage, setStage] = useState<InterviewStage>("upload");
 
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const interview = useInterview(); 
 
-  const [answers, setAnswers] = useState<string[]>([]);
+    switch (interview.stage) {
+        case "upload":
+            return <UploadView onStartInterview={interview.startInterview} />;
 
-    function handleAnswerSubmitted(answer: string) {
-    setAnswers((previous) => [...previous, answer]);
+        case "interview":
+            return (
+                <InterviewView
+                    questionNumber={interview.questionNumber}
+                    totalQuestions={interview.totalQuestions}
+                    question={interview.currentQuestion}
+                    onSubmitAnswer={interview.submitAnswer}
+                />
+                );
 
-    if (currentQuestionIndex === interviewQuestions.length - 1) {
-        setStage("complete");
-        return;
-    }
-
-    setCurrentQuestionIndex((previous) => previous + 1);
-    }
-
-    function handleEndSession() {
-  setStage("upload");
-  setCurrentQuestionIndex(0);
-  setAnswers([]);
-}
-
-  switch (stage) {
-    case "upload":
-      return <UploadView onStartInterview={() => setStage("interview")} />;
-
-    case "interview":
-      return (
-        <InterviewView
-            questionNumber={currentQuestionIndex + 1}
-            totalQuestions={interviewQuestions.length}
-            question={interviewQuestions[currentQuestionIndex]}
-            onSubmitAnswer={handleAnswerSubmitted}
-        />
-        );
-
-    case "complete":
-        return (
-            <CompleteView
-            onEndSession={handleEndSession}
-            />
-        );
+        case "complete":
+            return (
+                <CompleteView
+                onEndSession={interview.endSession}
+                />
+            );
 
     default:
-      return null;
-  }
+        return null;
+    }
 }
