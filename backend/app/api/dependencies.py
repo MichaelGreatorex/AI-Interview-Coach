@@ -33,13 +33,6 @@ def get_interview_document_repository(
 def get_storage_provider() -> StorageProvider:
     return LocalStorageProvider()
 
-def get_interview_session_service(
-    repository: InterviewSessionRepository = Depends(
-        get_interview_session_repository,
-    ),
-) -> InterviewSessionService:
-    return InterviewSessionService(repository)
-
 def get_document_service(
     session_repository: InterviewSessionRepository = Depends(
         get_interview_session_repository,
@@ -55,6 +48,19 @@ def get_document_service(
         session_repository=session_repository,
         document_repository=document_repository,
         storage_provider=storage_provider,
+    )
+    
+def get_interview_session_service(
+    repository: InterviewSessionRepository = Depends(
+        get_interview_session_repository,
+    ),
+    document_service: DocumentService = Depends(
+        get_document_service,
+    ),
+) -> InterviewSessionService:
+    return InterviewSessionService(
+        repository=repository,
+        document_service=document_service,
     )
     
 def get_interview_generation_service() -> InterviewGenerationService:

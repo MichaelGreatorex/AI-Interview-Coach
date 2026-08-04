@@ -63,5 +63,14 @@ class DocumentService:
             file_size=stored_document.file_size,
             storage_path=stored_document.storage_path,
         )
-
+        
         return self._repository.create(interview_document)
+    
+    def delete_documents_for_session(
+        self,
+        session: InterviewSession,
+    ) -> None:
+        documents = self._repository.get_by_interview_session_id(session.id)
+        for document in documents:
+            self._storage_provider.delete(document)
+            self._repository.delete(document)
