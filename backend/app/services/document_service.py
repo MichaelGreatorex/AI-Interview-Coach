@@ -1,6 +1,7 @@
 from fastapi import UploadFile
 from app.models.enums import DocumentType
 from app.models.interview_document import InterviewDocument
+from app.models.interview_session import InterviewSession
 from app.repositories.interview_document_repository import (
     InterviewDocumentRepository,
 )
@@ -28,25 +29,39 @@ class DocumentService:
         file: UploadFile,
     ) -> InterviewDocument:
 
-        interview_session = self._session_repository.get_by_public_id(
+        session = self._session_repository.get_by_public_id(
             interview_session_id
         )
 
-        if interview_session is None:
+        if session is None:
             raise ValueError(
                 f"Interview session '{interview_session_id}' does not exist"
             )
+            
+        return self.upload_document_for_session(
+            session=session,
+            document_type=document_type,
+            file=file,
+        )
 
-        stored_file = self._storage_provider.store(file)
+    
+    def upload_document_for_session(
+        self,
+        session: InterviewSession,
+        document_type: DocumentType,
+        file: UploadFile,
+    ) -> InterviewDocument:
+        
+        stored_document = self._storage_provider.store(file)
 
         interview_document = InterviewDocument(
-            interview_session_id=interview_session.id,
+            interview_session_id=session.id,
             document_type=document_type,
-            original_filename=stored_file.original_filename,
-            stored_filename=stored_file.stored_filename,
-            mime_type=stored_file.mime_type,
-            file_size=stored_file.file_size,
-            storage_path=stored_file.storage_path,
+            original_filename=stored_document.original_filename,
+            stored_filename=stored_document.stored_filename,
+            mime_type=stored_document.mime_type,
+            file_size=stored_document.file_size,
+            storage_path=stored_document.storage_path,
         )
 
         return self._repository.create(interview_document)
