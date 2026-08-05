@@ -20,6 +20,14 @@ class InterviewResponseService:
         question_text: str,
         answer: str,
     ) -> InterviewResponse:
+        
+        existing = self._repository.get_by_session_and_question(
+            session_id,
+            question_id,
+        )
+
+        if existing is not None:
+            return existing
 
         response = InterviewResponse(
             interview_session_id=session_id,

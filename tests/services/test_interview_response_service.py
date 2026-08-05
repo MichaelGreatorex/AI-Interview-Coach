@@ -17,6 +17,7 @@ def test_save_response_creates_response() -> None:
     )
 
     repository.create.return_value = expected
+    repository.get_by_session_and_question.return_value = None
 
     service = InterviewResponseService(repository)
 

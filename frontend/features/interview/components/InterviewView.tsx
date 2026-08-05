@@ -1,17 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { InterviewQuestion } from "../models/interview";
 
 type InterviewViewProps = {
     question: InterviewQuestion;
+    onSubmitAnswer: (answer: string) => Promise<void>;
 };
 
 export default function InterviewView({
     question,
+    onSubmitAnswer,
 }: InterviewViewProps) {
-
     const [answer, setAnswer] = useState("");
+    const [isBusy, setIsBusy] = useState(false);
+    const submittingRef = useRef(false); // Track if the form is currently being submitted
+
+    const handleSubmit = async () => {
+        if (submittingRef.current) return;
+        if (!answer.trim()) return;
+        submittingRef.current = true;
+        setIsBusy(true);
+        try {
+            await onSubmitAnswer(answer);
+        } finally {
+            setIsBusy(false);
+            submittingRef.current = false;
+        }
+    };
 
     return (
         <main className="min-h-screen bg-background px-6 py-12">
@@ -27,6 +43,7 @@ export default function InterviewView({
             <textarea
                 value={answer}
                 onChange={(event) => setAnswer(event.target.value)}
+                disabled={isBusy}
                 placeholder="Type your answer here..."
                 className="
                 min-h-48
@@ -48,11 +65,11 @@ export default function InterviewView({
 
             <div className="mt-6 flex justify-end">
                 <button
-                onClick={() => {
-                    // Handle answer submission
-                }}
-                disabled={!answer.trim()}
-                className="
+                    onClick={() => {
+                        handleSubmit();
+                    }}
+                    disabled={!answer.trim() || isBusy}
+                    className="
                     rounded-xl
                     bg-blue-600
                     px-6
@@ -65,7 +82,7 @@ export default function InterviewView({
                     disabled:bg-slate-400
                 "
                 >
-                Submit Answer
+                {isBusy ? "Submitting..." : "Submit Answer"}
                 </button>
             </div>
             </section>

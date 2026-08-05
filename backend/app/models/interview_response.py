@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -14,6 +14,14 @@ if TYPE_CHECKING:
 
 class InterviewResponse(Base):
     __tablename__ = "interview_responses"
+    
+    __table_args__ = (
+        UniqueConstraint(
+            "interview_session_id",
+            "question_id",
+            name="uq_interview_response_question",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(
         Integer,
