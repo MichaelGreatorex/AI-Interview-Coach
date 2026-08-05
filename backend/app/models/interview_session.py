@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Integer, String, Text, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -11,7 +12,11 @@ from app.db.session import Base
 if TYPE_CHECKING:
     from app.models.interview_document import InterviewDocument
 
-
+class InterviewStatus(StrEnum):
+    CREATED = "created"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    
 class InterviewSession(Base):
     __tablename__ = "interview_sessions"
 
@@ -34,10 +39,10 @@ class InterviewSession(Base):
         nullable=True,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(50),
+    status: Mapped[InterviewStatus] = mapped_column(
+        Enum(InterviewStatus),
         nullable=False,
-        default="created",
+        default=InterviewStatus.CREATED,
     )
 
     notes: Mapped[str | None] = mapped_column(
@@ -62,3 +67,4 @@ class InterviewSession(Base):
         back_populates="session",
         cascade="all, delete-orphan",
     )
+    

@@ -14,3 +14,11 @@ class StorageProvider(ABC):
     ) -> StoredFile:
         """Persist a file and return its metadata."""
         raise NotImplementedError
+    
+    @abstractmethod
+    def delete(
+        self,
+        stored_file: StoredFile,
+    ) -> None:
+        """Delete a file from storage."""
+        raise NotImplementedError

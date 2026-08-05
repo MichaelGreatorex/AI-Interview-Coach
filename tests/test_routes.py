@@ -4,10 +4,7 @@ from fastapi.testclient import TestClient
 
 EXPECTED_V1_ROUTES = [
     "/api/v1/health",
-    "/api/v1/interview/start",
-    "/api/v1/interview/answer",
-    "/api/v1/sessions",
-    "/api/v1/sessions/{interview_session_id}/documents",
+    "/api/v1/interviews",
 ]
 
 

@@ -1,18 +1,34 @@
 import { useState } from "react";
 
 import FileUploadCard from "./FileUploadCard";
+import { ActiveInterview } from "../models/interview";
+import { startInterview } from "../api/interviews";
 
 type UploadViewProps = {
-    onStartInterview: () => void;
+    onInterviewStarted: (interview: ActiveInterview) => void;
 };
 
 export default function UploadView({
-    onStartInterview,
+    onInterviewStarted,
 }: UploadViewProps) {
     const [cv, setCv] = useState<File | null>(null);
     const [jobDescription, setJobDescription] = useState<File | null>(null);
-
+    
     const canStart = cv !== null && jobDescription !== null;
+
+    const handleStartInterview = async () => {
+    if (!cv || !jobDescription) {
+        return;
+    }
+
+    try {
+        const interview = await startInterview(cv, jobDescription);
+        onInterviewStarted(interview);
+    } catch (error) {
+        console.error(error);
+        // TODO: Show a friendly error message.
+    }
+};
 
     return (
         <main className="min-h-screen bg-background px-6 py-12">
@@ -48,7 +64,7 @@ export default function UploadView({
             <div className="mt-10 text-center">
             <button
                 disabled={!canStart}
-                onClick={onStartInterview}
+                onClick={handleStartInterview}
                 className="rounded-xl bg-blue-600 px-8 py-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-foreground/10 disabled:text-foreground/50"
             >
                 Start Interview

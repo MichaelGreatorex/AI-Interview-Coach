@@ -1,26 +1,23 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
 from app.api.dependencies import InterviewSessionServiceDependency
-from app.schemas.interview_session import (
-    CreateInterviewSessionRequest,
-    InterviewSessionCreatedResponse,
-    InterviewSessionResponse,
+
+router = APIRouter(
+    prefix="/sessions",
+    tags=["Interview Sessions"],
 )
 
-router = APIRouter(tags=["Interview Sessions"])
 
-
-@router.post(
-    "",
-    response_model=InterviewSessionCreatedResponse,
-    status_code=status.HTTP_201_CREATED,
+@router.delete(
+    "/{interview_session_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
 )
-def create_interview_session(
-    request: CreateInterviewSessionRequest,
+def delete_session(
+    interview_session_id: str,
     service: InterviewSessionServiceDependency,
-) -> InterviewSessionCreatedResponse:
-    interview_session = service.create_session(request)
+) -> Response:
+    service.delete_session(interview_session_id)
 
-    return InterviewSessionCreatedResponse(
-        session=InterviewSessionResponse.model_validate(interview_session)
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT,
     )

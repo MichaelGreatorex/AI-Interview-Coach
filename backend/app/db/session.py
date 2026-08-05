@@ -54,8 +54,6 @@ def get_engine():
             autoflush=False,
         )
 
-        from app.models import InterviewSession  # noqa: F401
-
         Base.metadata.create_all(bind=engine)
 
     return engine

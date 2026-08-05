@@ -35,3 +35,8 @@ class LocalStorageProvider(StorageProvider):
 			mime_type=file.content_type or "application/octet-stream",
 			file_size=len(content),
 		)
+	
+	def delete(self, stored_file: StoredFile) -> None:
+		file_path = Path(stored_file.storage_path)
+		if file_path.exists():
+			file_path.unlink()

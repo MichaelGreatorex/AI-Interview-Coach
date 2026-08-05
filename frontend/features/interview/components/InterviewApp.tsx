@@ -1,37 +1,55 @@
 "use client";
 
-import { useInterview } from "../hooks/useInterview";
+import { useState } from "react";
 
 import UploadView from "./UploadView";
 import InterviewView from "./InterviewView";
 import CompleteView from "./CompleteView";
 
+import { ActiveInterview } from "../models/interview";
+
+type InterviewStage =
+    | "upload"
+    | "interview"
+    | "complete";
+
 export default function InterviewApp() {
+    const [stage, setStage] =
+        useState<InterviewStage>("upload");
 
-    const interview = useInterview(); 
+    const [interview, setInterview] =
+        useState<ActiveInterview | null>(null);
 
-    switch (interview.stage) {
+    switch (stage) {
         case "upload":
-            return <UploadView onStartInterview={interview.startInterview} />;
+            return (
+                <UploadView
+                    onInterviewStarted={(interview) => {
+                        setInterview(interview);
+                        setStage("interview");
+                    }}
+                />
+            );
 
         case "interview":
+            if (!interview) {
+                return null;
+            }
+
             return (
                 <InterviewView
-                    questionNumber={interview.questionNumber}
-                    totalQuestions={interview.totalQuestions}
                     question={interview.currentQuestion}
-                    onSubmitAnswer={interview.submitAnswer}
                 />
-                );
+            );
 
         case "complete":
             return (
                 <CompleteView
-                onEndSession={interview.endSession}
+                    onEndSession={() => setStage("upload")}
                 />
             );
 
-    default:
-        return null;
+        default:
+            return null;
     }
 }

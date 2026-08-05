@@ -31,3 +31,10 @@ class InterviewDocumentRepository:
         )
 
         return list(self._db.scalars(statement))
+
+    def delete(
+        self,
+        interview_document: InterviewDocument,
+    ) -> None:
+        self._db.delete(interview_document)
+        self._db.flush()

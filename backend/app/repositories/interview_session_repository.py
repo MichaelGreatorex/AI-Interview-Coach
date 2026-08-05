@@ -2,6 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.interview_session import InterviewSession
+from app.db import session
+from app.models.interview_document import InterviewDocument
 
 
 class InterviewSessionRepository:
@@ -22,8 +24,17 @@ class InterviewSessionRepository:
         self,
         interview_session_id: str,
     ) -> InterviewSession | None:
-        statement = select(InterviewSession).where(
-            InterviewSession.interview_session_id == interview_session_id
+        return (
+            self._db.query(InterviewSession)
+            .filter(
+                InterviewSession.interview_session_id == interview_session_id
+            )
+            .first()
         )
-
-        return self._db.scalar(statement)
+        
+    def delete(
+        self,
+        session: InterviewSession,
+    ) -> None:
+        self._db.delete(session)
+        self._db.commit()
