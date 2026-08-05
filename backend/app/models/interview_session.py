@@ -68,3 +68,9 @@ class InterviewSession(Base):
         cascade="all, delete-orphan",
     )
     
+    if TYPE_CHECKING:
+        from app.models.interview_response import InterviewResponse
+    responses: Mapped[list["InterviewResponse"]] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+    )

@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Response, status
 
-from app.api.dependencies import InterviewSessionServiceDependency
+from app.api.dependencies import (
+    
+    InterviewSessionServiceDependency,
+)
 
 router = APIRouter(
     prefix="/sessions",

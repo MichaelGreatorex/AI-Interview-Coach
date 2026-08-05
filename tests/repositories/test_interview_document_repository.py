@@ -1,0 +1,75 @@
+from sqlalchemy.orm import Session
+
+from app.models.enums import DocumentType
+from app.models.interview_document import InterviewDocument
+from app.models.interview_session import InterviewSession, InterviewStatus
+from app.repositories.interview_document_repository import InterviewDocumentRepository
+from app.repositories.interview_session_repository import InterviewSessionRepository
+
+
+def create_session(db_session: Session, public_id: str) -> InterviewSession:
+	return InterviewSessionRepository(db_session).create(
+		InterviewSession(
+			interview_session_id=public_id,
+			status=InterviewStatus.CREATED,
+		)
+	)
+
+
+def test_create_and_get_by_interview_session_id_return_saved_documents(
+	db_session: Session,
+) -> None:
+	session = create_session(db_session, "session-docs")
+	repository = InterviewDocumentRepository(db_session)
+
+	first_document = repository.create(
+		InterviewDocument(
+			interview_session_id=session.id,
+			document_type=DocumentType.CV,
+			original_filename="cv.pdf",
+			stored_filename="stored-cv.pdf",
+			mime_type="application/pdf",
+			file_size=10,
+			storage_path="/tmp/stored-cv.pdf",
+		)
+	)
+	second_document = repository.create(
+		InterviewDocument(
+			interview_session_id=session.id,
+			document_type=DocumentType.JOB_DESCRIPTION,
+			original_filename="job.pdf",
+			stored_filename="stored-job.pdf",
+			mime_type="application/pdf",
+			file_size=20,
+			storage_path="/tmp/stored-job.pdf",
+		)
+	)
+
+	documents = repository.get_by_interview_session_id(session.id)
+
+	assert [document.id for document in documents] == [first_document.id, second_document.id]
+	assert [document.document_type for document in documents] == [
+		DocumentType.CV,
+		DocumentType.JOB_DESCRIPTION,
+	]
+
+
+def test_delete_removes_document(db_session: Session) -> None:
+	session = create_session(db_session, "session-delete-doc")
+	repository = InterviewDocumentRepository(db_session)
+	document = repository.create(
+		InterviewDocument(
+			interview_session_id=session.id,
+			document_type=DocumentType.CV,
+			original_filename="cv.pdf",
+			stored_filename="stored-cv.pdf",
+			mime_type="application/pdf",
+			file_size=10,
+			storage_path="/tmp/stored-cv.pdf",
+		)
+	)
+
+	repository.delete(document)
+	db_session.commit()
+
+	assert repository.get_by_interview_session_id(session.id) == []
