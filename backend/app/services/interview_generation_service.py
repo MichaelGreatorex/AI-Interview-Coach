@@ -1,7 +1,21 @@
+from app.services.models.interview_question import InterviewQuestion
+
+
 class InterviewGenerationService:
-    def generate_questions(self) -> list[str]:
-        return [
-            "Tell me about yourself.",
-            "Why do you want this job?",
-            "When can you start?",
-        ]
+    QUESTIONS = [
+        InterviewQuestion(
+            id=1,
+            text="Tell me about yourself.",
+        ),
+        InterviewQuestion(
+            id=2,
+            text="Why are you interested in this role?",
+        ),
+        InterviewQuestion(
+            id=3,
+            text="Describe a challenging project.",
+        ),
+    ]
+    
+    def get_first_question(self) -> InterviewQuestion:
+        return self.QUESTIONS[0]

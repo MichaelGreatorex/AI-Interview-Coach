@@ -1,42 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { InterviewQuestion } from "../models/interview";
 
 type InterviewViewProps = {
-    questionNumber: number;
-    totalQuestions: number;
-    question: string;
-    onSubmitAnswer: (answer: string) => void;
+    question: InterviewQuestion;
 };
 
 export default function InterviewView({
-    questionNumber,
-    totalQuestions,
     question,
-    onSubmitAnswer,
 }: InterviewViewProps) {
+
     const [answer, setAnswer] = useState("");
-
-    function handleSubmit() {
-        if (!answer.trim()) {
-        return;
-        }
-
-        onSubmitAnswer(answer);
-
-        setAnswer("");
-    }
 
     return (
         <main className="min-h-screen bg-background px-6 py-12">
         <div className="mx-auto max-w-3xl">
             <header className="mb-10">
-            <p className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
-                Interview question {questionNumber} of {totalQuestions}
-            </p>
 
             <h1 className="mt-4 text-4xl font-bold">
-                {question}
+                {question.text}
             </h1>
             </header>
 
@@ -65,7 +48,9 @@ export default function InterviewView({
 
             <div className="mt-6 flex justify-end">
                 <button
-                onClick={handleSubmit}
+                onClick={() => {
+                    // Handle answer submission
+                }}
                 disabled={!answer.trim()}
                 className="
                     rounded-xl

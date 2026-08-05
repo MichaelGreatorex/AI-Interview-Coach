@@ -43,6 +43,6 @@ class InterviewWorkflowService:
         )
 
         # generate interview questions
-        questions = self._generation_service.generate_questions()
+        question = self._generation_service.get_first_question()
 
-        return InterviewStartResult(session=session, questions=questions)
+        return InterviewStartResult(session=session, question=question)
