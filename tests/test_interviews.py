@@ -25,5 +25,7 @@ def test_start_interview_returns_201():
     assert "session_id" in body
     assert isinstance(body["session_id"], str)
     assert body["session_id"]
-    assert "questions" in body
-    assert isinstance(body["questions"], list)
+    assert "question" in body
+    assert isinstance(body["question"], dict)
+    assert body["question"]["id"] == 1
+    assert body["question"]["text"]
