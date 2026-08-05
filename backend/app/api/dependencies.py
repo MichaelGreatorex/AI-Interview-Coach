@@ -8,22 +8,18 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.session import get_db
 
-from app.repositories.interview_session_repository import (
-    InterviewSessionRepository,
-)
-from app.repositories.interview_document_repository import (
-    InterviewDocumentRepository,
-)
-
-from app.services.interview_session_service import (
-    InterviewSessionService,
-)
-from app.services.document_service import DocumentService
+from app.repositories.interview_session_repository import InterviewSessionRepository
+from app.repositories.interview_document_repository import InterviewDocumentRepository
+from app.repositories.interview_response_repository import InterviewResponseRepository
 
 from app.storage.local_provider import LocalStorageProvider
 from app.storage.provider import StorageProvider
+
+from app.services.document_service import DocumentService
+from app.services.interview_session_service import InterviewSessionService
 from app.services.interview_generation_service import InterviewGenerationService
 from app.services.interview_workflow_service import InterviewWorkflowService
+from app.services.interview_response_service import InterviewResponseService
 
 def get_interview_session_repository(
     db: Session = Depends(get_db),
@@ -34,6 +30,11 @@ def get_interview_document_repository(
     db: Session = Depends(get_db),
 ) -> InterviewDocumentRepository:
     return InterviewDocumentRepository(db)
+
+def get_interview_response_repository(
+    db: Session = Depends(get_db),
+) -> InterviewResponseRepository:
+    return InterviewResponseRepository(db)
 
 def get_storage_provider() -> StorageProvider:
     if settings.environment == "test":
@@ -92,10 +93,27 @@ def get_interview_workflow_service(
         generation_service=generation_service,
     )
 
-
+def get_interview_response_service(
+    repository: InterviewResponseRepository = Depends(
+        get_interview_response_repository,
+    ),
+) -> InterviewResponseService:
+    return InterviewResponseService(
+        repository=repository,
+    )
+    
 InterviewSessionServiceDependency = Annotated[
     InterviewSessionService,
     Depends(get_interview_session_service),
+]
+InterviewResponseServiceDependency = Annotated[
+    InterviewResponseService,
+    Depends(get_interview_response_service),
+]
+
+InterviewGenerationServiceDependency = Annotated[
+    InterviewGenerationService,
+    Depends(get_interview_generation_service),
 ]
 
 DocumentServiceDependency = Annotated[
@@ -106,9 +124,4 @@ DocumentServiceDependency = Annotated[
 InterviewWorkflowServiceDependency = Annotated[
     InterviewWorkflowService,
     Depends(get_interview_workflow_service),
-]
-
-InterviewGenerationServiceDependency = Annotated[
-    InterviewGenerationService,
-    Depends(get_interview_generation_service),
 ]
