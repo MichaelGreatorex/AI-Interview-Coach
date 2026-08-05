@@ -1,10 +1,25 @@
+import { useState } from "react";
+
 type CompleteViewProps = {
-  onEndSession: () => void;
+  onEndSession: () => Promise<void>;
 };
 
 export default function CompleteView({
   onEndSession,
 }: CompleteViewProps) {
+  const [isBusy, setIsBusy] = useState(false);
+
+  const handleEndSession = async () => {
+    if (isBusy) return;
+
+    setIsBusy(true);
+    try {
+      await onEndSession();
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background px-6 py-12">
       <div className="mx-auto flex max-w-3xl flex-col items-center justify-center text-center">
@@ -42,10 +57,14 @@ export default function CompleteView({
               text-white
               transition
               hover:bg-blue-700
+              hover:bg-blue-700
+              disabled:cursor-not-allowed
+              disabled:bg-slate-400
             "
-            onClick={onEndSession}
+            onClick={handleEndSession}
+            disabled={isBusy}
           >
-            End Session
+            {isBusy ? "Ending Interview..." : "End Interview"}
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ type FileUploadCardProps = {
   file: File | null;
   accept: string;
   onFileSelected: (file: File | null) => void;
+  disabled: boolean;
 };
 
 export default function FileUploadCard({
@@ -12,6 +13,7 @@ export default function FileUploadCard({
   file,
   accept,
   onFileSelected,
+  disabled,
 }: FileUploadCardProps) {
   return (
     <div className="rounded-3xl border border-black/10 bg-background p-6 shadow-sm dark:border-white/10">
@@ -39,8 +41,9 @@ export default function FileUploadCard({
         type="file"
         accept={accept}
         onChange={(event) =>
-        onFileSelected(event.target.files?.[0] ?? null)
+            onFileSelected(event.target.files?.[0] ?? null)
         }
+        disabled={disabled}
     />
     </label>
 

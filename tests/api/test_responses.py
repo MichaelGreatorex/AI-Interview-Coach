@@ -46,3 +46,35 @@ def test_submit_interview_response_validates_request_body(client: TestClient) ->
 	)
 
 	assert response.status_code == 422
+ 
+def test_save_response_returns_existing_response_if_already_present(client: TestClient, db_session: Session) -> None:
+	session = create_session(db_session, "session-response-api-duplicate")
+
+	# Submit the first response
+	response1 = client.post(
+		f"/api/v1/sessions/{session.interview_session_id}/responses",
+		json={
+			"question_id": 1,
+			"question_text": "Tell me about yourself.",
+			"answer": "I am a software engineer.",
+		},
+	)
+
+	assert response1.status_code == 201
+	body1 = response1.json()
+
+	# Submit the same response again
+	response2 = client.post(
+		f"/api/v1/sessions/{session.interview_session_id}/responses",
+		json={
+			"question_id": 1,
+			"question_text": "Tell me about yourself.",
+			"answer": "I am a software engineer.",
+		},
+	)
+
+	assert response2.status_code == 201
+	body2 = response2.json()
+
+	# The second response should return the existing response
+	assert body1["id"] == body2["id"]

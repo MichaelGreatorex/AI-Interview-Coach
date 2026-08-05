@@ -13,22 +13,33 @@ export default function UploadView({
 }: UploadViewProps) {
     const [cv, setCv] = useState<File | null>(null);
     const [jobDescription, setJobDescription] = useState<File | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     
     const canStart = cv !== null && jobDescription !== null;
+    const [isBusy, setIsBusy] = useState(false);
 
     const handleStartInterview = async () => {
-    if (!cv || !jobDescription) {
-        return;
-    }
+        if (!cv || !jobDescription || isBusy) {
+            return;
+        }
 
-    try {
-        const interview = await startInterview(cv, jobDescription);
-        onInterviewStarted(interview);
-    } catch (error) {
-        console.error(error);
-        // TODO: Show a friendly error message.
-    }
-};
+        setErrorMessage(null);
+        setIsBusy(true);
+        
+        try {
+            const interview = await startInterview(cv, jobDescription);
+            onInterviewStarted(interview);
+        } catch (error) {
+            console.error(error);
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Could not start interview. Please try again.",
+            );
+        } finally {
+            setIsBusy(false);
+        }
+    };
 
     return (
         <main className="min-h-screen bg-background px-6 py-12">
@@ -50,6 +61,7 @@ export default function UploadView({
                 file={cv}
                 accept=".pdf,.doc,.docx"
                 onFileSelected={setCv}
+                disabled={isBusy}
             />
 
             <FileUploadCard
@@ -58,17 +70,26 @@ export default function UploadView({
                 file={jobDescription}
                 accept=".pdf,.doc,.docx"
                 onFileSelected={setJobDescription}
+                disabled={isBusy}
             />
             </div>
 
             <div className="mt-10 text-center">
             <button
-                disabled={!canStart}
+                disabled={!canStart || isBusy}
                 onClick={handleStartInterview}
                 className="rounded-xl bg-blue-600 px-8 py-4 font-semibold text-white disabled:cursor-not-allowed disabled:bg-foreground/10 disabled:text-foreground/50"
             >
                 Start Interview
             </button>
+            {isBusy ? (
+                <p className="mt-4 text-sm text-foreground/70">
+                {isBusy ? "Preparing your interview, please wait..." : "Start Interview"}
+                </p>
+            ) : null}
+            {errorMessage ? (
+                <p className="mt-4 text-sm text-red-600">{errorMessage}</p>
+            ) : null}
             </div>
         </div>
         </main>
