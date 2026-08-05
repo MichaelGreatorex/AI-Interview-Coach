@@ -1,6 +1,11 @@
+import tempfile
+from pathlib import Path
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.db.session import get_db
 
 from app.repositories.interview_session_repository import (
@@ -31,6 +36,10 @@ def get_interview_document_repository(
     return InterviewDocumentRepository(db)
 
 def get_storage_provider() -> StorageProvider:
+    if settings.environment == "test":
+        uploads_dir = Path(tempfile.gettempdir()) / "ai-interview-coach" / "uploads"
+        return LocalStorageProvider(uploads_dir=uploads_dir)
+
     return LocalStorageProvider()
 
 def get_document_service(
