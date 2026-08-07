@@ -15,11 +15,11 @@ type InterviewStage =
     | "complete";
 
 export default function InterviewApp() {
+    const [activeInterview, setActiveInterview] =
+        useState<ActiveInterview | null>(null);
+
     const [stage, setStage] =
         useState<InterviewStage>("upload");
-
-    const [interview, setInterview] =
-        useState<ActiveInterview | null>(null);
 
     const [isBusy, setIsBusy] = useState(false);
 
@@ -28,25 +28,25 @@ export default function InterviewApp() {
             return (
                 <UploadView
                     onInterviewStarted={(interview) => {
-                        setInterview(interview);
+                        setActiveInterview(interview);
                         setStage("interview");
                     }}
                 />
             );
 
         case "interview":
-            if (!interview) {
+            if (!activeInterview) {
                 return null;
             }
 
             return (
                 <InterviewView
-                    question={interview.currentQuestion}
+                    question={activeInterview.currentQuestion}
                     onSubmitAnswer={async (answer) => {
-                        if (!interview) return;
-                        await submitResponse(interview.sessionId, {
-                            question_id: interview.currentQuestion.id,
-                            question_text: interview.currentQuestion.text,
+                        if (!activeInterview) return;
+                        await submitResponse(activeInterview.sessionId, {
+                            question_id: activeInterview.currentQuestion.id,
+                            question_text: activeInterview.currentQuestion.text,
                             answer,
                         });
                         setStage("complete");
@@ -55,7 +55,7 @@ export default function InterviewApp() {
             );
 
         case "complete":
-            if (!interview) {
+            if (!activeInterview) {
                 return null;
             }
 
@@ -67,9 +67,9 @@ export default function InterviewApp() {
                         setIsBusy(true);
 
                         try {
-                            await deleteSession(interview.sessionId);
+                            await deleteSession(activeInterview.sessionId);
 
-                            setInterview(null);
+                            setActiveInterview(null);
                             setStage("upload");
                         } finally {
                             setIsBusy(false);
