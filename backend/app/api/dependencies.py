@@ -17,7 +17,7 @@ from app.storage.provider import StorageProvider
 
 from app.services.document_service import DocumentService
 from app.services.interview_session_service import InterviewSessionService
-from app.services.interview_generation_service import InterviewGenerationService
+from backend.app.services.interview_engine import InterviewGenerationService
 from app.services.interview_workflow_service import InterviewWorkflowService
 from app.services.interview_response_service import InterviewResponseService
 

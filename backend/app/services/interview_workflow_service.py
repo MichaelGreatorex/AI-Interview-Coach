@@ -2,7 +2,7 @@ from fastapi import UploadFile
 
 from app.services.document_service import DocumentService
 from app.services.interview_session_service import InterviewSessionService
-from app.services.interview_generation_service import InterviewGenerationService
+from backend.app.services.interview_engine import InterviewGenerationService
 from app.services.models.interview_start_result import InterviewStartResult
 
 from app.models.enums import DocumentType
