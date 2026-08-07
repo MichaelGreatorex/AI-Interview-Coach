@@ -1,4 +1,4 @@
-from app.services.models.interview_question import InterviewQuestion
+from app.schemas.interview_question import InterviewQuestion
 
 
 QUESTIONS = [

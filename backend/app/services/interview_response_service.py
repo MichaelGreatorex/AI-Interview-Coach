@@ -2,7 +2,7 @@ from app.models.interview_response import InterviewResponse
 from app.repositories.interview_response_repository import (
     InterviewResponseRepository,
 )
-from app.models.interview_session import InterviewSession
+
 
 
 class InterviewResponseService:
