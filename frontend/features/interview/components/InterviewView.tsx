@@ -23,6 +23,7 @@ export default function InterviewView({
         setIsBusy(true);
         try {
             await onSubmitAnswer(answer);
+            setAnswer(""); // Clear the answer after successful submission
         } finally {
             setIsBusy(false);
             submittingRef.current = false;
