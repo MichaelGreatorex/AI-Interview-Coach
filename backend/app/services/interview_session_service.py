@@ -15,8 +15,8 @@ class InterviewSessionService:
         self,
         repository: InterviewSessionRepository,
         document_service: DocumentService,
-        response_service: InterviewResponseService,
-        interview_engine: InterviewEngine,
+        response_service: InterviewResponseService | None = None,
+        interview_engine: InterviewEngine | None = None,
     ) -> None:
         self._repository = repository
         self._response_service = response_service

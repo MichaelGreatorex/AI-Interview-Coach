@@ -5,9 +5,15 @@ from app.data.interview_questions import QUESTIONS
 class InterviewEngine:
     _interview_engine: "InterviewEngine"
 
-    def __init__(self) -> None:
-        self._questions = QUESTIONS
+    def __init__(
+        self,
+        questions: tuple[InterviewQuestion, ...] | None = None,
+    ) -> None:
+        self._questions = questions if questions is not None else QUESTIONS
 
+    @property
+    def questions(self) -> tuple[InterviewQuestion, ...]:
+        return tuple(self._questions)
     
     def get_first_question(self) -> InterviewQuestion | None:
         if not self._questions:
