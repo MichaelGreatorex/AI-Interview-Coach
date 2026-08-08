@@ -2,7 +2,7 @@ from fastapi import UploadFile
 
 from app.services.document_service import DocumentService
 from app.services.interview_session_service import InterviewSessionService
-from app.services.interview_generation_service import InterviewGenerationService
+from app.services.interview_engine import InterviewEngine
 from app.services.models.interview_start_result import InterviewStartResult
 
 from app.models.enums import DocumentType
@@ -13,7 +13,7 @@ class InterviewWorkflowService:
         self,
         session_service: InterviewSessionService,
         document_service: DocumentService,
-        generation_service: InterviewGenerationService,
+        generation_service: InterviewEngine,
     ) -> None:
 
         self._session_service = session_service

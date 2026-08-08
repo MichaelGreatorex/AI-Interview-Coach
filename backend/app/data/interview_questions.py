@@ -1,8 +1,7 @@
-from app.services.models.interview_question import InterviewQuestion
+from app.schemas.interview_question import InterviewQuestion
 
 
-class InterviewGenerationService:
-    QUESTIONS = [
+QUESTIONS = [
         InterviewQuestion(
             id=1,
             text="Tell me about yourself.",
@@ -16,6 +15,3 @@ class InterviewGenerationService:
             text="Describe a challenging project.",
         ),
     ]
-    
-    def get_first_question(self) -> InterviewQuestion:
-        return self.QUESTIONS[0]

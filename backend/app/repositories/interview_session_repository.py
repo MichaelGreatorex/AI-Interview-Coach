@@ -19,6 +19,15 @@ class InterviewSessionRepository:
         self._db.refresh(interview_session)
 
         return interview_session
+    
+    def update(
+        self,
+        interview_session: InterviewSession,
+    ) -> InterviewSession:
+        self._db.commit()
+        self._db.refresh(interview_session)
+
+        return interview_session
 
     def get_by_public_id(
         self,

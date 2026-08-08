@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from app.models.interview_session import InterviewSession
-from app.services.models.interview_question import InterviewQuestion
+from app.schemas.interview_question import InterviewQuestion
 
 
 @dataclass(frozen=True)

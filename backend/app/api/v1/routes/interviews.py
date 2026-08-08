@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, UploadFile, status
 
 from app.api.dependencies import InterviewWorkflowServiceDependency
 from app.schemas.interview import InterviewStartResponse
-from app.schemas.question import InterviewQuestionResponse
+from app.schemas.interview_question import InterviewQuestionResponse
 
 router = APIRouter(
     prefix="/interviews",
@@ -17,11 +17,11 @@ router = APIRouter(
 )
 
 def start_interview(
-    workflow_service: InterviewWorkflowServiceDependency,
+    session_service: InterviewWorkflowServiceDependency,
     cv: UploadFile = File(...),
     job_description: UploadFile = File(...),
 ) -> InterviewStartResponse:
-    result = workflow_service.start_interview(
+    result = session_service.start_interview(
         cv_file=cv,
         job_description_file=job_description,
     )

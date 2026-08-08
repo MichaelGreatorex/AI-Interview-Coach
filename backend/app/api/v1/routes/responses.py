@@ -1,18 +1,13 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 
 from app.api.dependencies import (
-    InterviewResponseServiceDependency,
     InterviewSessionServiceDependency,
+    InterviewResponseServiceDependency,
 )
-
+from app.schemas.interview_response import InterviewResponseSchema
 from app.schemas.submit_interview_response_request import (
     SubmitInterviewResponseRequest,
 )
-
-from app.schemas.interview_response import (
-    InterviewResponseSchema,
-)
-
 
 router = APIRouter(
     prefix="/sessions/{interview_session_id}/responses",
@@ -23,7 +18,7 @@ router = APIRouter(
 @router.post(
     "",
     response_model=InterviewResponseSchema,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
 )
 def submit_interview_response(
     interview_session_id: str,
@@ -31,21 +26,19 @@ def submit_interview_response(
     session_service: InterviewSessionServiceDependency,
     response_service: InterviewResponseServiceDependency,
 ) -> InterviewResponseSchema:
-
-    session = session_service.get_by_public_id(
-        interview_session_id,
-    )
+    session = session_service.get_by_public_id(interview_session_id)
 
     if session is None:
-        raise ValueError(
-            f"Interview session '{interview_session_id}' does not exist"
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Interview session '{interview_session_id}' does not exist",
         )
 
-    response = response_service.save_response(
-        session_id=session.id,
-        question_id=request.question_id,
-        question_text=request.question_text,
-        answer=request.answer,
+    saved = response_service.save_response(
+        session.id,
+        request.question_id,
+        request.question_text,
+        request.answer,
     )
 
-    return InterviewResponseSchema.model_validate(response)
+    return InterviewResponseSchema.model_validate(saved)

@@ -17,7 +17,7 @@ from app.storage.provider import StorageProvider
 
 from app.services.document_service import DocumentService
 from app.services.interview_session_service import InterviewSessionService
-from app.services.interview_generation_service import InterviewGenerationService
+from app.services.interview_engine import InterviewEngine
 from app.services.interview_workflow_service import InterviewWorkflowService
 from app.services.interview_response_service import InterviewResponseService
 
@@ -60,39 +60,6 @@ def get_document_service(
         storage_provider=storage_provider,
     )
     
-def get_interview_session_service(
-    repository: InterviewSessionRepository = Depends(
-        get_interview_session_repository,
-    ),
-    document_service: DocumentService = Depends(
-        get_document_service,
-    ),
-) -> InterviewSessionService:
-    return InterviewSessionService(
-        repository=repository,
-        document_service=document_service,
-    )
-    
-def get_interview_generation_service() -> InterviewGenerationService:
-    return InterviewGenerationService()
-
-def get_interview_workflow_service(
-    session_service: InterviewSessionService = Depends(
-        get_interview_session_service,
-    ),
-    document_service: DocumentService = Depends(
-        get_document_service,
-    ),
-    generation_service: InterviewGenerationService = Depends(
-        get_interview_generation_service,
-    ),
-) -> InterviewWorkflowService:
-    return InterviewWorkflowService(
-        session_service=session_service,
-        document_service=document_service,
-        generation_service=generation_service,
-    )
-
 def get_interview_response_service(
     repository: InterviewResponseRepository = Depends(
         get_interview_response_repository,
@@ -101,6 +68,49 @@ def get_interview_response_service(
     return InterviewResponseService(
         repository=repository,
     )
+    
+def get_interview_engine() -> InterviewEngine:
+    return InterviewEngine()
+    
+def get_interview_session_service(
+    repository: InterviewSessionRepository = Depends(
+        get_interview_session_repository,
+    ),
+    document_service: DocumentService = Depends(
+        get_document_service,
+    ),
+    response_service: InterviewResponseService = Depends(
+        get_interview_response_service,
+    ),
+    interview_engine: InterviewEngine = Depends(
+        get_interview_engine,
+    ),
+) -> InterviewSessionService:
+    return InterviewSessionService(
+        repository=repository,
+        document_service=document_service,
+        response_service=response_service,
+        interview_engine=interview_engine,
+    )
+
+def get_interview_workflow_service(
+    session_service: InterviewSessionService = Depends(
+        get_interview_session_service,
+    ),
+    document_service: DocumentService = Depends(
+        get_document_service,
+    ),
+    generation_service: InterviewEngine = Depends(
+        get_interview_engine,
+    ),
+) -> InterviewWorkflowService:
+    return InterviewWorkflowService(
+        session_service=session_service,
+        document_service=document_service,
+        generation_service=generation_service,
+    )
+
+
     
 InterviewSessionServiceDependency = Annotated[
     InterviewSessionService,
@@ -111,9 +121,9 @@ InterviewResponseServiceDependency = Annotated[
     Depends(get_interview_response_service),
 ]
 
-InterviewGenerationServiceDependency = Annotated[
-    InterviewGenerationService,
-    Depends(get_interview_generation_service),
+InterviewEngineDependency = Annotated[
+    InterviewEngine,
+    Depends(get_interview_engine),
 ]
 
 DocumentServiceDependency = Annotated[

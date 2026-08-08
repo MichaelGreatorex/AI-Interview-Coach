@@ -3,7 +3,6 @@ import tempfile
 from pathlib import Path
 from typing import Generator
 
-import app.models
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
