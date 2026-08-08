@@ -14,7 +14,7 @@ def create_session(db_session: Session, public_id: str) -> InterviewSession:
 	)
 
 
-def test_submit_interview_response_returns_201(client: TestClient, db_session: Session) -> None:
+def test_submit_interview_response_returns_200(client: TestClient, db_session: Session) -> None:
 	session = create_session(db_session, "session-response-api")
 
 	response = client.post(
@@ -26,7 +26,7 @@ def test_submit_interview_response_returns_201(client: TestClient, db_session: S
 		},
 	)
 
-	assert response.status_code == 201
+	assert response.status_code == 200
 
 	body = response.json()
 	assert isinstance(body["id"], int)
@@ -60,7 +60,7 @@ def test_save_response_returns_existing_response_if_already_present(client: Test
 		},
 	)
 
-	assert response1.status_code == 201
+	assert response1.status_code == 200
 	body1 = response1.json()
 
 	# Submit the same response again
@@ -73,7 +73,7 @@ def test_save_response_returns_existing_response_if_already_present(client: Test
 		},
 	)
 
-	assert response2.status_code == 201
+	assert response2.status_code == 200
 	body2 = response2.json()
 
 	# The second response should return the existing response

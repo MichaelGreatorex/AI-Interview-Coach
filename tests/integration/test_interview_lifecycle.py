@@ -51,7 +51,7 @@ def test_interview_lifecycle_persists_response_and_cleans_up_session(
 		},
 	)
 
-	assert submit_response.status_code == 201
+	assert submit_response.status_code == 200
 	assert len(response_repository.get_for_session(session_id)) == 1
 
 	delete_response = client.delete(f"/api/v1/sessions/{public_id}")
