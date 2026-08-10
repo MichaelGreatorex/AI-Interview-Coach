@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.interview_session import InterviewSession, InterviewStatus
+from app.repositories.interview_response_repository import InterviewResponseRepository
 from app.repositories.interview_session_repository import InterviewSessionRepository
 
 
@@ -29,11 +30,10 @@ def test_submit_interview_response_returns_200(client: TestClient, db_session: S
 	assert response.status_code == 200
 
 	body = response.json()
-	assert isinstance(body["id"], int)
-	assert body["question_id"] == 1
-	assert body["question_text"] == "Tell me about yourself."
-	assert body["answer"] == "I am a software engineer."
-	assert body["created_at"]
+	assert body["interview_complete"] is False
+	assert isinstance(body["next_question"], dict)
+	assert isinstance(body["next_question"]["id"], int)
+	assert body["next_question"]["text"]
 
 
 def test_submit_interview_response_validates_request_body(client: TestClient) -> None:
@@ -49,6 +49,7 @@ def test_submit_interview_response_validates_request_body(client: TestClient) ->
  
 def test_save_response_returns_existing_response_if_already_present(client: TestClient, db_session: Session) -> None:
 	session = create_session(db_session, "session-response-api-duplicate")
+	response_repository = InterviewResponseRepository(db_session)
 
 	# Submit the first response
 	response1 = client.post(
@@ -76,5 +77,10 @@ def test_save_response_returns_existing_response_if_already_present(client: Test
 	assert response2.status_code == 200
 	body2 = response2.json()
 
-	# The second response should return the existing response
-	assert body1["id"] == body2["id"]
+	assert body1["interview_complete"] is False
+	assert body2["interview_complete"] is False
+
+	# Duplicate submissions are idempotent and should not create extra rows.
+	persisted_responses = response_repository.get_for_session(session.id)
+	assert len(persisted_responses) == 1
+	assert persisted_responses[0].question_id == 1

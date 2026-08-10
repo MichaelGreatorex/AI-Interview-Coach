@@ -89,9 +89,25 @@ class InterviewSessionService:
         responses = self._response_service.get_responses_for_session(
             session.id,
         )
+        
+        print(
+            "DEBUG:",
+            {
+                "session_id": session.id,
+                "response_count": len(responses),
+                "response_question_ids": [r.question_id for r in responses],
+                "available_question_ids": [q.id for q in self._interview_engine.questions],
+            }
+        )
+
 
         next_question = self._interview_engine.get_next_question(
             responses,
+        )
+        
+        print(
+            "DEBUG NEXT QUESTION:",
+            next_question,
         )
 
         if next_question is None:

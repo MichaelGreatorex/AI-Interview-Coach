@@ -1,217 +1,99 @@
 # AI Interview Coach
 
-An AI-powered interview preparation platform that generates personalized interview questions from a candidate's CV and job description, simulates mock interviews, and evaluates responses using structured AI-driven rubrics.
-
----
-
 [![Backend CI](https://github.com/MichaelGreatorex/AI-Interview-Coach/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/MichaelGreatorex/AI-Interview-Coach/actions/workflows/backend-ci.yml)
+[![Backend CD](https://img.shields.io/website?down_color=red&down_message=down&label=CD%20Production&up_color=brightgreen&up_message=live&url=http%3A%2F%2Faiic-prod-alb-925692489.eu-west-2.elb.amazonaws.com)](http://aiic-prod-alb-925692489.eu-west-2.elb.amazonaws.com)
 
----
+AI Interview Coach is being developed into a full AI-powered interview preparation platform that takes a candidates CV and the JD for the job they are applying for and generates a personalised interview simulation based on both documents. 
 
-## Overview
+```
+Please note: this AI Layer is a feature that is under current development and not included in the current first production deployment
+```
 
-This project simulates a real-world interview experience by:
+## Status
 
-- Parsing a user's CV (PDF upload)
-- Analyzing a job description
-- Generating tailored interview questions
-- Running a chat-based mock interview
-- Scoring and providing structured feedback on answers
+The repository now contains a working, test-covered interview workflow foundation and Terraform-based AWS infrastructure.
 
-The system is fully deployed on AWS with CI/CD automation.
+Current implementation includes:
 
----
+- FastAPI backend with session lifecycle and response submission endpoints.
+- Next.js frontend scaffold and local development runtime.
+- PostgreSQL persistence via SQLAlchemy + Alembic migrations.
+- Local document storage provider used during interview startup.
+- Infrastructure as Code in Terraform for core AWS services.
 
-## Architecture
+Planned AI features are kept in the roadmap below and are not yet implemented.
 
-### Frontend Architecture
+## Current Backend API
 
-- Next.js
+Base path: `/api/v1`
 
-### Backend API Architecture
+- `GET /health`: health check.
+- `POST /interviews`: starts an interview session from uploaded CV and job description files.
+- `POST /sessions/{interview_session_id}/responses`: saves an answer and returns interview progression state (`interview_complete`, `next_question`).
+- `DELETE /sessions/{interview_session_id}`: deletes a session and related stored data.
 
-- FastAPI (Dockerized)
+Interview questions are currently served by an internal static question set and deterministic interview engine logic.
 
-### Compute Architecture
+## Infrastructure As Code (Terraform)
 
-- AWS ECS (Fargate)
+The `infra/` directory now contains active Terraform configuration for AWS provisioning.
 
-### AWS Service Architecture
+Implemented resources include:
 
-- S3 (CV storage)
-- RDS (PostgreSQL)
-- CloudWatch (logging)
+- VPC networking: VPC, public/private subnets, internet gateway, NAT gateway, and route tables.
+- Security groups: ALB, frontend ECS service, backend ECS service, and RDS access controls.
+- Compute: ECS cluster, backend and frontend task definitions, backend and frontend ECS services.
+- Load balancing: ALB, listeners, routing rules, backend/frontend target groups.
+- Data and persistence: PostgreSQL RDS instance and DB subnet group.
+- Container registry: ECR repositories for backend and frontend images.
+- Observability: CloudWatch log group for ECS services.
+- IAM: task execution role plus Secrets Manager access policy for DB credentials.
 
-### AI Layer
+## CI/CD
 
-- OpenAI API
+GitHub Actions workflow: `.github/workflows/backend-ci.yml`
 
----
+- Pull requests run CI checks (compose build, migrations, backend tests).
+- Pushes to `main` and `develop` run the same pipeline and act as the current delivery gate.
 
-## Core Features
+## Local Development
 
-### CV And JD Analysis
+### Runtime Requirements
 
-- Extracts structured data from CV
-- Parses job descriptions into skill requirements
-- Identifies skill gaps and alignment
+- Docker Desktop with Docker Compose
 
-### Interview Generation
+Optional host tooling:
 
-- Generates technical questions
-- Generates behavioral questions
-- Generates CV-specific probing questions
+- Python `3.14` (for direct local pytest/alembic workflows)
+- Node.js `24.18.0` and npm `11.16.0` (for direct frontend workflows)
 
-### Mock Interview Engine
+### Start Full Stack
 
-- Chat-based interview flow
-- Stateful session management
-- Real-time question/answer loop
-
-### AI Evaluation System
-
-Each answer is scored using:
-
-- Clarity
-- Technical depth
-- Relevance
-- Structure (for example, STAR method)
-
-Outputs:
-
-- Score (1 to 10)
-- Strengths and weaknesses
-- Ideal improved answer
-
----
-
-## Deployment
-
-The system is deployed on AWS using containerized infrastructure.
-
-### Deployment Components
-
-- ECS (Fargate): backend service runtime
-- S3: CV file storage
-- RDS (PostgreSQL): persistent session storage
-- ALB: API routing
-- CloudWatch: logging and monitoring
-
----
-
-## CI/CD Pipeline
-
-Automated deployment via GitHub Actions:
-
-1. Code pushed to `main`
-2. Backend is linted and tested
-3. Docker image is built
-4. Image pushed to AWS ECR
-5. ECS service updated automatically
-
----
-
-## Tech Stack
-
-### Frontend Stack
-
-- Next.js `16.2.9`
-- React `19.2.4`
-- React DOM `19.2.4`
-- TypeScript `5`
-- Tailwind CSS `4`
-- ESLint `9`
-
-### Backend Stack
-
-- Python `3.14`
-- FastAPI `0.138.2`
-- Pydantic `2.13.4`
-- Pydantic Settings `2.11.0`
-- SQLAlchemy `2.0.51`
-- Alembic `1.18.5`
-- Uvicorn `0.32.1`
-- python-multipart `0.0.30`
-- pytest `9.1.1`
-- pytest-asyncio `1.4.0`
-- httpx2 `2.5.0`
-- OpenAI API (client package not added yet)
-
-### Infrastructure Stack
-
-- AWS ECS (Fargate)
-- AWS S3
-- AWS RDS (PostgreSQL)
-- AWS ECR
-- GitHub Actions
-
----
-
-## Clone, Setup, And Run
-
-If you are cloning this repository and want to run it locally, use the following runtime and commands.
-
-### Required Runtime
-
-- Docker Desktop (with Docker Compose)
-
-Optional (only for host-based testing workflows):
-
-- Node.js `24.18.0` via `nvm` for the frontend
-- npm `11.16.0`
-- Python `3.14`
-
-The repository pins Python in `.python-version`, Node in `.nvmrc`, and backend dependencies in `backend/requirements.txt` and `backend/requirements-dev.txt`.
-
-### Environment Files
-
-- Backend settings are loaded from `backend/.env`
-- A starter template is available at `backend/.env.example`
-
-### Full Container Stack (Frontend + Backend + Postgres)
-
-Docker Compose is the canonical local startup path. From repository root, start all three services:
+From repository root:
 
 ```bash
 docker compose up --build
 ```
 
-Optional: override the local Postgres password for containers:
+Services:
 
-```bash
-export POSTGRES_PASSWORD="your-local-password"
-docker compose up --build
-```
+- Postgres: `127.0.0.1:5432`
+- Backend (FastAPI): `http://127.0.0.1:8000`
+- Frontend (Next.js): `http://127.0.0.1:3000`
 
-This starts:
-
-- Postgres on `127.0.0.1:5432`
-- Backend pytests (run once at startup) and then FastAPI on `http://127.0.0.1:8000`
-- Next.js frontend on `http://127.0.0.1:3000`
-
-If tests fail, the backend container exits and `docker compose up` reports the failure in backend logs.
-
-Default local connection string (also in `backend/.env.example`):
-
-```text
-postgresql://ai_interview:ai_interview_dev_password@127.0.0.1:5432/ai_interview_coach
-```
-
-Stop the stack:
+Stop stack:
 
 ```bash
 docker compose down
 ```
 
-Reset Postgres data volume:
+Reset volumes:
 
 ```bash
 docker compose down -v
 ```
 
-### Optional Wrapper Scripts
-
-The scripts below now proxy to Docker Compose for convenience.
+### Convenience Scripts
 
 All services:
 
@@ -229,7 +111,7 @@ Postgres only:
 ./scripts/postgres.sh down
 ```
 
-### Run Tests Manually
+### Run Backend Tests
 
 ```bash
 cd backend
@@ -237,137 +119,69 @@ source .venv/bin/activate
 python -m pytest -vv ../tests
 ```
 
-### Database Migrations (Alembic)
+### Alembic Migrations
 
-The backend uses Alembic for database schema migrations.
-
-#### Prerequisites
-
-- Docker Compose is running the Postgres service
-- The backend container has access to the database URL from `backend/.env` or the container environment
-
-#### First model note
-
-The initial SQLAlchemy model is defined at `backend/app/models/interview_session.py` and is mapped to the `interview_sessions` table via Alembic.
-
-### Generate migration (example command)
-
-```bash
-docker compose run --rm backend \
-    alembic revision --autogenerate -m "initial schema"
-```
-
-#### Run migrations from the backend container
+Containerized:
 
 ```bash
 docker compose run --rm backend alembic upgrade head
 docker compose run --rm backend alembic current
 ```
 
-#### Run migrations from the local backend environment
+Local environment:
 
 ```bash
 cd backend
 source .venv/bin/activate
 export DATABASE_URL=postgresql://ai_interview:ai_interview_dev_password@127.0.0.1:5432/ai_interview_coach
-alembic current
 alembic revision --autogenerate -m "describe your change"
 alembic upgrade head
 ```
 
-#### Common migration commands
+## Tech Stack
 
-```bash
-alembic history
-alembic downgrade -1
-```
+### Frontend
 
-The migration configuration lives in `backend/alembic.ini` and the migration scripts live in `backend/alembic/versions/`.
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
 
-### Test Suite Coverage
+### Backend
 
-The backend test suite currently validates configuration behavior, basic API health behavior, and API route wiring.
+- Python
+- FastAPI
+- SQLAlchemy
+- Alembic
+- Pydantic
+- pytest
 
-#### `tests/test_config.py`
+### Infrastructure
 
-- `test_settings_parse_comma_separated_allowed_origins`
-  - Verifies comma-separated `allowed_origins` input is parsed into a clean list.
-- `test_settings_convert_empty_strings_to_none`
-  - Verifies empty and whitespace values for optional settings become `None`.
+- Terraform
+- AWS ECS (Fargate)
+- AWS ALB
+- AWS ECR
+- AWS RDS (PostgreSQL)
+- AWS CloudWatch
 
-#### `tests/test_health.py`
-
-- `test_health_check`
-  - Verifies `GET /api/v1/health` returns HTTP 200 and `{"status": "ok"}`.
-
-#### `tests/test_routes.py`
-
-- `test_openapi_includes_expected_v1_routes`
-  - Parameterized test that verifies each expected v1 route is present in `GET /openapi.json`.
-  - Covered routes:
-    - `/api/v1/health`
-    - `/api/v1/cv/upload`
-    - `/api/v1/jd/upload`
-    - `/api/v1/interview/start`
-    - `/api/v1/interview/answer`
-    - `/api/v1/sessions/{session_id}`
-
-#### `tests/conftest.py`
-
-- Provides the shared FastAPI `TestClient` fixture used by API tests.
-
-#### Current Coverage Boundaries
-
-- The suite currently checks route registration and API shape, not full business logic.
-- Placeholder route handlers are intentionally not exercised yet.
-- As route implementations are added, add behavior tests alongside each endpoint.
-
-### Validate Frontend
-
-```bash
-cd frontend
-npm run lint
-npm run build
-```
-
-### Current Repository State
-
-- The frontend lives in `frontend` as a Next.js App Router app
-- The backend lives in `backend` as a FastAPI app
-- Local runtime is intended to be container-first via Docker Compose
-- The frontend validates with `npm run lint` and `npm run build` on Node `24.18.0`
-- The only fully implemented backend endpoint today is the health check
-
----
-
-## Project Structure
+## Repository Layout
 
 ```text
-/frontend           -> Next.js UI
-/backend           -> FastAPI server
-/backend/app/models -> SQLAlchemy models
-/backend/alembic   -> Alembic migration configuration and scripts
-/infra             -> Docker + CI/CD configs
-/prompts           -> LLM prompt templates
-/tests             -> Unit + integration tests
-/docs              -> Architecture decisions
+/frontend            Next.js UI
+/backend             FastAPI application
+/backend/alembic     Database migrations
+/infra               Terraform AWS infrastructure
+/tests               API, unit, repository, and integration tests
+/docs                Project documentation
 ```
 
----
+## Roadmap (Planned AI Interview Coach Features)
 
-## Key Engineering Highlights
+These are planned target capabilities and remain part of the project direction:
 
-- End-to-end AI pipeline (CV -> JD -> interview -> scoring)
-- LLM-based structured evaluation system
-- Production-style cloud deployment on AWS
-- Automated CI/CD pipeline
-- Stateful conversational interview system
-
----
-
-## Future Improvements
-
-- Voice-based interview mode
-- Adaptive difficulty questioning
-- Multi-interviewer simulation
-- Personal performance tracking over time
+- CV parsing and job-description understanding with AI assistance.
+- AI-generated, role-specific interview questions.
+- AI-based answer scoring and structured feedback (for example, clarity, depth, relevance, STAR structure).
+- Personalized coaching loops and progress tracking over time.
+- Adaptive difficulty, multi-interviewer simulation, and voice-based interview flows.
