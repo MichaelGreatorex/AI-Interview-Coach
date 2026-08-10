@@ -79,16 +79,39 @@ resource "aws_ecs_task_definition" "backend" {
         }
       ]
 
-      environment = [
+    environment = [
         {
-          name  = "ENVIRONMENT"
-          value = "production"
+            name  = "ENVIRONMENT"
+            value = "production"
         },
         {
-          name  = "AWS_REGION"
-          value = var.aws_region
+            name  = "AWS_REGION"
+            value = var.aws_region
+        },
+        {
+            name  = "DATABASE_HOST"
+            value = aws_db_instance.postgres.address
+        },
+        {
+            name  = "DATABASE_PORT"
+            value = tostring(aws_db_instance.postgres.port)
+        },
+        {
+            name  = "DATABASE_NAME"
+            value = aws_db_instance.postgres.db_name
+        },
+        {
+            name  = "DATABASE_USER"
+            value = aws_db_instance.postgres.username
         }
-      ]
+    ]
+
+    secrets = [
+        {
+            name      = "DATABASE_PASSWORD"
+            valueFrom = "${aws_db_instance.postgres.master_user_secret[0].secret_arn}:password::"
+        }
+    ]
 
       logConfiguration = {
         logDriver = "awslogs"

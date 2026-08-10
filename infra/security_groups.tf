@@ -75,3 +75,29 @@ resource "aws_security_group" "backend" {
     Name = "${local.name_prefix}-backend"
   })
 }
+
+resource "aws_security_group" "rds" {
+  name        = "${local.name_prefix}-rds"
+  description = "Security group for the PostgreSQL RDS instance"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "PostgreSQL from backend ECS"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.backend.id]
+  }
+
+  egress {
+    description = "Allow outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-rds"
+  })
+}
