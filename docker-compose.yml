@@ -81,6 +81,7 @@ services:
   frontend:
     build:
       context: ./frontend
+    command: ["npm", "run", "dev"]
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -94,22 +95,18 @@ services:
 
     depends_on:
       backend:
-        condition: service_healthy
+          condition: service_healthy
 
     ports:
       - "3000:3000"
 
     healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-        ]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 12
+
+
 
 volumes:
   postgres_data:
