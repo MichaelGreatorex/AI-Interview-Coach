@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -30,7 +30,7 @@ class InterviewDocument(Base):
             values_callable=lambda enum: [e.value for e in enum],
         ),
         nullable=False,
-)
+    )
 
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -41,6 +41,11 @@ class InterviewDocument(Base):
     file_size: Mapped[int] = mapped_column(nullable=False)
 
     storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    
+    extracted_text: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
