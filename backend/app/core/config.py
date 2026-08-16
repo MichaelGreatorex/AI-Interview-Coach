@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     openai_api_key: Optional[str] = None
+    openai_document_model: str = "gpt-4.1-mini"
 
     aws_region: str = "eu-west-2"
     s3_bucket_name: Optional[str] = None
