@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import Mock, call
 
 import pytest
@@ -9,6 +10,7 @@ from app.models.interview_document import InterviewDocument
 from app.models.interview_session import InterviewSession, InterviewStatus
 from app.services.document_service import DocumentService
 from app.storage.models import StoredFile
+from app.extraction.factory import DocumentTextExtractorFactory
 
 
 def create_upload_file(filename: str = "cv.pdf") -> UploadFile:
@@ -37,6 +39,7 @@ def test_upload_document_raises_when_session_is_missing() -> None:
 		session_repository=session_repository,
 		document_repository=document_repository,
 		storage_provider=storage_provider,
+		text_extractor_factory=DocumentTextExtractorFactory(),
 	)
 
 	with pytest.raises(
@@ -57,6 +60,10 @@ def test_upload_document_for_session_stores_file_and_persists_metadata() -> None
 	session_repository = Mock()
 	document_repository = Mock()
 	storage_provider = Mock()
+	text_extractor_factory = Mock()
+	extractor = Mock()
+	extractor.extract.return_value = "Extracted document text"
+	text_extractor_factory.get_extractor.return_value = extractor
 	upload = create_upload_file()
 	session = create_session()
 
@@ -73,6 +80,7 @@ def test_upload_document_for_session_stores_file_and_persists_metadata() -> None
 		session_repository=session_repository,
 		document_repository=document_repository,
 		storage_provider=storage_provider,
+		text_extractor_factory=text_extractor_factory,
 	)
 
 	created = service.upload_document_for_session(
@@ -82,6 +90,8 @@ def test_upload_document_for_session_stores_file_and_persists_metadata() -> None
 	)
 
 	storage_provider.store.assert_called_once_with(upload)
+	text_extractor_factory.get_extractor.assert_called_once_with("application/pdf")
+	extractor.extract.assert_called_once_with(Path("/tmp/stored-cv.pdf"))
 	document_repository.create.assert_called_once()
 
 	persisted = document_repository.create.call_args.args[0]
@@ -92,6 +102,7 @@ def test_upload_document_for_session_stores_file_and_persists_metadata() -> None
 	assert persisted.mime_type == "application/pdf"
 	assert persisted.file_size == 12
 	assert persisted.storage_path == "/tmp/stored-cv.pdf"
+	assert persisted.extracted_text == "Extracted document text"
 	assert created is persisted
 
 
@@ -99,6 +110,7 @@ def test_delete_documents_for_session_deletes_files_and_records() -> None:
 	session_repository = Mock()
 	document_repository = Mock()
 	storage_provider = Mock()
+	text_extractor_factory = Mock()
 	session = create_session()
 	documents = [
 		InterviewDocument(
@@ -128,6 +140,7 @@ def test_delete_documents_for_session_deletes_files_and_records() -> None:
 		session_repository=session_repository,
 		document_repository=document_repository,
 		storage_provider=storage_provider,
+		text_extractor_factory=text_extractor_factory,
 	)
 
 	service.delete_documents_for_session(session)
