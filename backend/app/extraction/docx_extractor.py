@@ -3,7 +3,9 @@ from pathlib import Path
 from docx import Document
 
 
-class DocxDocumentTextExtractor:
+from app.extraction.extractor import DocumentTextExtractor
+
+class DocxDocumentTextExtractor(DocumentTextExtractor):
     def extract(self, file_path: Path) -> str:
         document = Document(file_path)
 
