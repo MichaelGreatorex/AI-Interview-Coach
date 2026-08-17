@@ -48,9 +48,48 @@ def reset_test_state(mock_document_understanding_service: Mock) -> Generator[Non
     settings.environment = previous_environment
 
 
-@pytest.fixture(scope="module")
-def client() -> TestClient:
-    return TestClient(app)
+@pytest.fixture
+def client() -> Generator[TestClient, None, None]:
+    yield TestClient(app)
+
+
+@pytest.fixture
+def mock_document_understanding_service() -> Mock:
+    service = Mock(spec=DocumentUnderstandingService)
+
+    service.understand_document.side_effect = [
+        AiDocumentUnderstandingResult(
+            document_type=AiDocumentType.CV,
+            extracted_text=(
+                "John Doe\n"
+                "Senior Software Engineer\n"
+                "Python, C#, AWS"
+            ),
+        ),
+        AiDocumentUnderstandingResult(
+            document_type=AiDocumentType.JOB_DESCRIPTION,
+            extracted_text=(
+                "Senior Software Engineer\n"
+                "Requirements\n"
+                "Python, C#, AWS"
+            ),
+        ),
+    ]
+
+    return service
+
+
+@pytest.fixture
+def ai_test_client(
+    mock_document_understanding_service: Mock,
+) -> Generator[TestClient, None, None]:
+    app.dependency_overrides[
+        get_document_understanding_service
+    ] = lambda: mock_document_understanding_service
+
+    yield TestClient(app)
+
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -63,22 +102,3 @@ def db_session() -> Generator[Session, None, None]:
     finally:
         session.close()
 
-@pytest.fixture
-def mock_document_understanding_service() -> Mock:
-    service = Mock(spec=DocumentUnderstandingService)
-
-    def understand_document(file_path: Path, mime_type: str):
-        if "job" in file_path.name.lower():
-            return AiDocumentUnderstandingResult(
-                document_type=AiDocumentType.JOB_DESCRIPTION,
-                extracted_text="Test job description",
-            )
-
-        return AiDocumentUnderstandingResult(
-            document_type=AiDocumentType.CV,
-            extracted_text="Test CV content",
-        )
-
-    service.understand_document.side_effect = understand_document
-
-    return service

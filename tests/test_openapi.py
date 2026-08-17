@@ -8,7 +8,7 @@ EXPECTED_V1_ROUTES = [
 ]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def openapi_paths(client: TestClient) -> set[str]:
     response = client.get("/openapi.json")
     assert response.status_code == 200
