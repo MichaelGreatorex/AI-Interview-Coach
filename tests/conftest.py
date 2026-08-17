@@ -19,13 +19,9 @@ from app.main import app
 
 
 @pytest.fixture(autouse=True)
-def reset_test_state(mock_document_understanding_service: Mock) -> Generator[None, None, None]:
+def reset_test_state() -> Generator[None, None, None]:
     previous_environment = settings.environment
     settings.environment = "test"
-
-    app.dependency_overrides[
-            get_document_understanding_service
-        ] = lambda: mock_document_understanding_service
 
     engine = get_engine()
     Base.metadata.drop_all(bind=engine)
@@ -42,10 +38,9 @@ def reset_test_state(mock_document_understanding_service: Mock) -> Generator[Non
 
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
     settings.environment = previous_environment
-    
     app.dependency_overrides.clear()
-    settings.environment = previous_environment
 
 
 @pytest.fixture
@@ -89,7 +84,10 @@ def ai_test_client(
 
     yield TestClient(app)
 
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(
+        get_document_understanding_service,
+        None,
+    )
 
 
 @pytest.fixture

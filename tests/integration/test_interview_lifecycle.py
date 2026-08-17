@@ -9,10 +9,10 @@ from app.repositories.interview_session_repository import InterviewSessionReposi
 
 
 def test_interview_lifecycle_persists_response_and_cleans_up_session(
-	client: TestClient,
+	ai_test_client: TestClient,
 	db_session: Session,
 ) -> None:
-	start_response = client.post(
+	start_response = ai_test_client.post(
 		"/api/v1/interviews",
 		files={
 			"cv": ("cv.txt", b"candidate cv content", "text/plain"),
@@ -42,7 +42,7 @@ def test_interview_lifecycle_persists_response_and_cleans_up_session(
 	stored_paths = [Path(document.storage_path) for document in stored_documents]
 	assert all(path.exists() for path in stored_paths)
 
-	submit_response = client.post(
+	submit_response = ai_test_client.post(
 		f"/api/v1/sessions/{public_id}/responses",
 		json={
 			"question_id": start_body["question"]["id"],
@@ -54,7 +54,7 @@ def test_interview_lifecycle_persists_response_and_cleans_up_session(
 	assert submit_response.status_code == 200
 	assert len(response_repository.get_for_session(session_id)) == 1
 
-	delete_response = client.delete(f"/api/v1/sessions/{public_id}")
+	delete_response = ai_test_client.delete(f"/api/v1/sessions/{public_id}")
 
 	assert delete_response.status_code == 204
 
