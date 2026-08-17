@@ -15,3 +15,7 @@ class OpenAIClient:
     @property
     def client(self) -> OpenAI:
         return self._client
+
+
+def get_openai_client() -> OpenAIClient:
+    return OpenAIClient()

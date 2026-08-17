@@ -6,7 +6,7 @@
 AI Interview Coach is being developed into a full AI-powered interview preparation platform that takes a candidates CV and the JD for the job they are applying for and generates a personalised interview simulation based on both documents. 
 
 ```
-Please note: this AI Layer is a feature that is under current development and not included in the current first production deployment
+Please note: this AI Layer is a feature that is under current development and not included in the latest v0.1.0 Release.
 ```
 
 ## Status

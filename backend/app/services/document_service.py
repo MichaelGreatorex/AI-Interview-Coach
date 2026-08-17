@@ -11,10 +11,7 @@ from app.repositories.interview_session_repository import (
     InterviewSessionRepository,
 )
 from app.storage.provider import StorageProvider
-from app.extraction.factory import DocumentTextExtractorFactory
-
-
-
+from app.ai.document_understanding_service import DocumentUnderstandingService
 
 class DocumentService:
     def __init__(
@@ -22,12 +19,12 @@ class DocumentService:
         session_repository: InterviewSessionRepository,
         document_repository: InterviewDocumentRepository,
         storage_provider: StorageProvider,
-        text_extractor_factory: DocumentTextExtractorFactory
+        document_understanding_service: DocumentUnderstandingService
     ) -> None:
         self._session_repository = session_repository
         self._repository = document_repository
         self._storage_provider = storage_provider
-        self._text_extractor_factory = text_extractor_factory
+        self._document_understanding_service = document_understanding_service
 
     def upload_document(
         self,
@@ -61,26 +58,24 @@ class DocumentService:
         
         stored_document = self._storage_provider.store(file)
         
-        try:
-            extractor = self._text_extractor_factory.get_extractor(stored_document.mime_type)
-            extracted_text = extractor.extract(Path(stored_document.storage_path))
-            interview_document = InterviewDocument(
-                interview_session_id=session.id,
-                document_type=document_type,
-                original_filename=stored_document.original_filename,
-                stored_filename=stored_document.stored_filename,
-                mime_type=stored_document.mime_type,
-                file_size=stored_document.file_size,
-                storage_path=stored_document.storage_path,
-                extracted_text=extracted_text,
-            )
-            
-            return self._repository.create(interview_document)
         
-        except Exception:
-            # If extraction fails, delete the stored file and raise an error
-            self._storage_provider.delete(stored_document)
-            raise
+        understanding = self._document_understanding_service.understand_document(
+            file_path=Path(stored_document.storage_path),
+            mime_type=stored_document.mime_type,
+        )
+        interview_document = InterviewDocument(
+            interview_session_id=session.id,
+            document_type=understanding.document_type,
+            original_filename=stored_document.original_filename,
+            stored_filename=stored_document.stored_filename,
+            mime_type=stored_document.mime_type,
+            file_size=stored_document.file_size,
+            storage_path=stored_document.storage_path,
+            extracted_text=understanding.extracted_text,
+        )
+            
+        return self._repository.create(interview_document)
+
     
     def delete_documents_for_session(
         self,

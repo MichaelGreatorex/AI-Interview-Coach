@@ -12,7 +12,8 @@ from app.repositories.interview_session_repository import InterviewSessionReposi
 from app.repositories.interview_document_repository import InterviewDocumentRepository
 from app.repositories.interview_response_repository import InterviewResponseRepository
 
-from app.extraction.factory import DocumentTextExtractorFactory
+from app.ai.document_understanding_service import DocumentUnderstandingService
+from app.ai.openai_client import OpenAIClient, get_openai_client
 
 from app.storage.local_provider import LocalStorageProvider
 from app.storage.provider import StorageProvider
@@ -45,8 +46,11 @@ def get_storage_provider() -> StorageProvider:
 
     return LocalStorageProvider()
 
-def get_document_text_extractor_factory() -> DocumentTextExtractorFactory:
-    return DocumentTextExtractorFactory()
+def get_document_understanding_service(
+    openai_client: OpenAIClient = Depends(get_openai_client),
+) -> DocumentUnderstandingService:
+    return DocumentUnderstandingService(openai_client=openai_client)
+
 
 def get_document_service(
     session_repository: InterviewSessionRepository = Depends(
@@ -58,15 +62,15 @@ def get_document_service(
     storage_provider: StorageProvider = Depends(
         get_storage_provider,
     ),
-    text_extractor_factory: DocumentTextExtractorFactory = Depends(
-        get_document_text_extractor_factory,
+    document_understanding_service: DocumentUnderstandingService = Depends(
+        get_document_understanding_service,
     ),
 ) -> DocumentService:
     return DocumentService(
         session_repository=session_repository,
         document_repository=document_repository,
         storage_provider=storage_provider,
-        text_extractor_factory=text_extractor_factory,
+        document_understanding_service=document_understanding_service,
     )
     
 def get_interview_response_service(
@@ -120,6 +124,7 @@ def get_interview_workflow_service(
     )
 
 
+
     
 InterviewSessionServiceDependency = Annotated[
     InterviewSessionService,
@@ -143,4 +148,9 @@ DocumentServiceDependency = Annotated[
 InterviewWorkflowServiceDependency = Annotated[
     InterviewWorkflowService,
     Depends(get_interview_workflow_service),
+]
+
+DocumentUnderstandingServiceDependency = Annotated[
+    DocumentUnderstandingService,
+    Depends(get_document_understanding_service),
 ]
