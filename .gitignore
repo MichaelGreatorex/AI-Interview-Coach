@@ -48,3 +48,6 @@ Thumbs.db
 
 # Docker
 *.tar
+
+# Test document fixtures
+/tests/fixtures/documents/
