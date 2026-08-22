@@ -176,6 +176,44 @@ alembic upgrade head
 /docs                Project documentation
 ```
 
+## Current workflow:
+```
+Upload
+  │
+  ▼
+WorkflowService.process_documents()
+  ├── SessionService.create_session()
+  ├── DocumentService.upload_document()
+  └── DocumentService.upload_document()
+        │
+        ▼
+    Inspect View
+
+
+Start
+  │
+  ▼
+WorkflowService.start_interview()
+  ├── InterviewEngine.get_first_question()
+  └── SessionService.activate_session()
+        │
+        ▼
+    Question 1
+
+
+Submit answer
+  │
+  ▼
+WorkflowService.submit_response()
+  ├── ResponseService.save_response()
+  ├── ResponseService.get_responses()
+  ├── InterviewEngine.get_next_question()
+  └── SessionService.update_status()
+        │
+        ├── next question
+        └── completed → cleanup
+```
+
 ## Roadmap (Planned AI Interview Coach Features)
 
 These are planned target capabilities and remain part of the project direction:

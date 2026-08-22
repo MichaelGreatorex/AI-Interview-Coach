@@ -1,13 +1,17 @@
 from uuid import uuid4
 from fastapi import HTTPException, status
+
 from app.schemas.submit_interview_response_response import SubmitInterviewResponseResponse
+
 from app.services.interview_response_service import InterviewResponseService
 from app.services.interview_engine import InterviewEngine
-from app.models.interview_session import InterviewSession, InterviewStatus
-from app.repositories.interview_session_repository import (
-    InterviewSessionRepository,
-)
 from app.services.document_service import DocumentService
+
+from app.models.interview_start_result import InterviewStartResult
+from app.models.interview_session import InterviewSession, InterviewStatus
+
+from app.repositories.interview_session_repository import InterviewSessionRepository
+
 
 class InterviewSessionService:
 
@@ -30,6 +34,7 @@ class InterviewSessionService:
         )
 
         return self._repository.create(interview_session)
+    
 
     def get_by_public_id(
         self,

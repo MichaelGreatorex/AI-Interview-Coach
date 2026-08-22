@@ -1,9 +1,6 @@
 from app.models.interview_response import InterviewResponse
-from app.repositories.interview_response_repository import (
-    InterviewResponseRepository,
-)
 
-
+from app.repositories.interview_response_repository import InterviewResponseRepository
 
 class InterviewResponseService:
 
