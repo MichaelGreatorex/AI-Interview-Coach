@@ -7,5 +7,3 @@ python-multipart==0.0.30
 sqlalchemy==2.0.51
 uvicorn[standard]==0.32.1
 openai
-PyMuPDF
-python-docx
