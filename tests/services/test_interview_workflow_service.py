@@ -5,7 +5,9 @@ from fastapi import UploadFile
 
 from app.models.enums import DocumentType
 from app.models.interview_session import InterviewSession, InterviewStatus
+
 from app.schemas.interview_question import InterviewQuestion
+
 from app.services.interview_workflow_service import InterviewWorkflowService
 
 def create_upload_file(filename: str) -> UploadFile:
@@ -25,7 +27,8 @@ def create_session() -> InterviewSession:
 def test_process_documents_creates_session_and_processes_both_documents() -> None:
     session_service = Mock()
     document_service = Mock()
-    generation_service = Mock()
+    interview_engine = Mock()
+    response_service = Mock()
 
     session = create_session()
 
@@ -42,7 +45,8 @@ def test_process_documents_creates_session_and_processes_both_documents() -> Non
     service = InterviewWorkflowService(
         session_service=session_service,
         document_service=document_service,
-        generation_service=generation_service,
+        response_service=response_service,
+        interview_engine=interview_engine,
     )
 
     cv_file = create_upload_file("cv.pdf")
@@ -68,7 +72,7 @@ def test_process_documents_creates_session_and_processes_both_documents() -> Non
         ),
     ]
 
-    generation_service.get_first_question.assert_not_called()
+    interview_engine.get_first_question.assert_not_called()
 
     assert result.session is session
     assert result.documents == [
@@ -79,7 +83,8 @@ def test_process_documents_creates_session_and_processes_both_documents() -> Non
     def test_start_interview_generates_first_question() -> None:
         session_service = Mock()
         document_service = Mock()
-        generation_service = Mock()
+        response_service = Mock()
+        interview_engine = Mock()
 
         session = create_session()
 
@@ -88,20 +93,23 @@ def test_process_documents_creates_session_and_processes_both_documents() -> Non
             text="Tell me about yourself.",
         )
 
-        generation_service.get_first_question.return_value = question
+        interview_engine.get_first_question.return_value = question
 
         service = InterviewWorkflowService(
             session_service=session_service,
             document_service=document_service,
-            generation_service=generation_service,
+            response_service=response_service,
+            interview_engine=interview_engine,
         )
 
         result = service.start_interview(session=session)
 
-        generation_service.get_first_question.assert_called_once_with()
+        interview_engine.get_first_question.assert_called_once_with()
 
         session_service.create_session.assert_not_called()
         document_service.upload_document_for_session.assert_not_called()
+        response_service.save_response.assert_not_called()
 
         assert result.session is session
         assert result.question is question
+    

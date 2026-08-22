@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.dependencies import InterviewSessionServiceDependency
+from app.api.dependencies import InterviewWorkflowServiceDependency
 from app.schemas.submit_interview_response_request import (
     SubmitInterviewResponseRequest,
 )
@@ -21,9 +21,9 @@ router = APIRouter(
 def submit_interview_response(
     interview_session_id: str,
     request: SubmitInterviewResponseRequest,
-    session_service: InterviewSessionServiceDependency,
+    workflow_service: InterviewWorkflowServiceDependency,
 ) -> SubmitInterviewResponseResponse:
-    return session_service.submit_response(
+    return workflow_service.submit_response(
         interview_session_id,
         request,
     )

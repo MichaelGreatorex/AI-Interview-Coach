@@ -15,6 +15,7 @@ class InterviewDocumentResponse(BaseModel):
     stored_filename: str
     mime_type: str
     file_size: int
+    extracted_text: str
     created_at: datetime
     updated_at: datetime
 

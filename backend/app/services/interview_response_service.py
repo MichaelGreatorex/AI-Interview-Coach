@@ -1,6 +1,8 @@
 from app.models.interview_response import InterviewResponse
+from app.repositories.interview_response_repository import (
+    InterviewResponseRepository,
+)
 
-from app.repositories.interview_response_repository import InterviewResponseRepository
 
 class InterviewResponseService:
 
@@ -17,7 +19,7 @@ class InterviewResponseService:
         question_text: str,
         answer: str,
     ) -> InterviewResponse:
-        
+
         existing = self._repository.get_by_session_and_question(
             session_id,
             question_id,

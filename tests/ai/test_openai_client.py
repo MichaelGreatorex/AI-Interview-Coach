@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -29,5 +29,6 @@ def test_openai_client_creates_sdk_client() -> None:
 
     openai_mock.assert_called_once_with(
         api_key="test-api-key",
+        http_client=ANY,
     )
     assert client.client is openai_mock.return_value

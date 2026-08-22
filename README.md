@@ -214,6 +214,22 @@ WorkflowService.submit_response()
         └── completed → cleanup
 ```
 
+## Dependencies
+```
+InterviewSessionService
+    ├── InterviewSessionRepository
+    └── DocumentService
+
+InterviewResponseService
+    └── InterviewResponseRepository
+
+InterviewWorkflowService
+    ├── InterviewSessionService
+    ├── DocumentService
+    ├── InterviewResponseService
+    └── InterviewEngine
+```
+
 ## Roadmap (Planned AI Interview Coach Features)
 
 These are planned target capabilities and remain part of the project direction:
