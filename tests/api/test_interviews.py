@@ -11,6 +11,7 @@ from app.repositories.interview_document_repository import (
 from app.repositories.interview_session_repository import (
     InterviewSessionRepository,
 )
+from app.models.interview_document import InterviewDocument
 
 
 def test_process_documents_returns_processed_documents(
@@ -117,3 +118,135 @@ def test_start_interview_returns_first_question(
 
     assert refreshed_session is not None
     assert refreshed_session.status == InterviewStatus.ACTIVE
+
+
+def test_update_document_text_returns_200(
+    ai_test_client: TestClient,
+    db_session: Session,
+) -> None:
+    session_repository = InterviewSessionRepository(db_session)
+    document_repository = InterviewDocumentRepository(db_session)
+
+    session = session_repository.create(
+        InterviewSession(
+            interview_session_id="session-update-document-api",
+            status=InterviewStatus.CREATED,
+        )
+    )
+
+    document = document_repository.create(
+        InterviewDocument(
+            interview_session_id=session.id,
+            document_type=DocumentType.CV,
+            original_filename="cv.txt",
+            stored_filename="stored-cv.txt",
+            mime_type="text/plain",
+            file_size=42,
+            storage_path="/tmp/stored-cv.txt",
+            extracted_text="Old text",
+        )
+    )
+
+    response = ai_test_client.patch(
+        (
+            f"/api/v1/interviews/{session.interview_session_id}"
+            f"/documents/{document.id}"
+        ),
+        json={
+            "extracted_text": "Updated text from inspect view",
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["id"] == document.id
+    assert body["extracted_text"] == "Updated text from inspect view"
+
+    db_session.expire_all()
+    updated = document_repository.get_by_id(document.id)
+
+    assert updated is not None
+    assert updated.extracted_text == "Updated text from inspect view"
+
+
+def test_update_document_text_rejects_document_from_another_session(
+    ai_test_client: TestClient,
+    db_session: Session,
+) -> None:
+    session_repository = InterviewSessionRepository(db_session)
+    document_repository = InterviewDocumentRepository(db_session)
+
+    owner_session = session_repository.create(
+        InterviewSession(
+            interview_session_id="session-owner",
+            status=InterviewStatus.CREATED,
+        )
+    )
+
+    other_session = session_repository.create(
+        InterviewSession(
+            interview_session_id="session-other",
+            status=InterviewStatus.CREATED,
+        )
+    )
+
+    document = document_repository.create(
+        InterviewDocument(
+            interview_session_id=owner_session.id,
+            document_type=DocumentType.CV,
+            original_filename="cv.txt",
+            stored_filename="stored-cv.txt",
+            mime_type="text/plain",
+            file_size=42,
+            storage_path="/tmp/stored-cv.txt",
+            extracted_text="Owner text",
+        )
+    )
+
+    response = ai_test_client.patch(
+        (
+            f"/api/v1/interviews/{other_session.interview_session_id}"
+            f"/documents/{document.id}"
+        ),
+        json={
+            "extracted_text": "Should be rejected",
+        },
+    )
+
+    assert response.status_code == 404
+    assert "does not belong to interview session" in response.json()["detail"]
+    
+    db_session.expire_all()
+
+    unchanged = document_repository.get_by_id(document.id)
+
+    assert unchanged is not None
+    assert unchanged.extracted_text == "Owner text"
+
+    
+def test_update_document_text_returns_404_for_missing_document(
+    ai_test_client: TestClient,
+    db_session: Session,
+) -> None:
+    session_repository = InterviewSessionRepository(db_session)
+
+    session = session_repository.create(
+        InterviewSession(
+            interview_session_id="session-missing-document",
+            status=InterviewStatus.CREATED,
+        )
+    )
+
+    response = ai_test_client.patch(
+        (
+            f"/api/v1/interviews/{session.interview_session_id}"
+            "/documents/999999"
+        ),
+        json={
+            "extracted_text": "Should not be saved",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == ("Interview document '999999' does not exist")

@@ -76,6 +76,28 @@ class DocumentService:
             
         return self._repository.create(interview_document)
 
+    def update_extracted_text(
+        self,
+        session: InterviewSession,
+        document_id: int,
+        extracted_text: str,
+    ) -> InterviewDocument:
+        document = self._repository.get_by_id(document_id)
+
+        if document is None:
+            raise ValueError(
+                f"Interview document '{document_id}' does not exist",
+            )
+
+        if document.interview_session_id != session.id:
+            raise ValueError(
+                f"Interview document '{document_id}' does not belong "
+                f"to interview session '{session.interview_session_id}'",
+            )
+
+        document.extracted_text = extracted_text
+
+        return self._repository.update(document)
     
     def delete_documents_for_session(
         self,

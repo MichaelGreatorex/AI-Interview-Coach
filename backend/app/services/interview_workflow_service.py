@@ -4,9 +4,8 @@ from fastapi import HTTPException, status
 from app.models.enums import DocumentType
 from app.models.interview_session import InterviewSession
 
-from app.schemas.submit_interview_response_request import (
-    SubmitInterviewResponseRequest,
-)
+from app.schemas.submit_interview_response_request import SubmitInterviewResponseRequest
+from app.models.interview_document import InterviewDocument
 
 from app.services.document_service import DocumentService
 from app.services.interview_engine import InterviewEngine
@@ -66,6 +65,37 @@ class InterviewWorkflowService:
                 job_description_document,
             ],
         )
+    
+    def update_extracted_text(
+        self,
+        interview_session_id: str,
+        document_id: int,
+        extracted_text: str,
+    ) -> InterviewDocument:
+        session = self._session_service.get_by_public_id(
+            interview_session_id,
+        )
+
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"Interview session "
+                    f"'{interview_session_id}' does not exist"
+                ),
+            )
+
+        try:
+            return self._document_service.update_extracted_text(
+                session=session,
+                document_id=document_id,
+                extracted_text=extracted_text,
+            )
+        except ValueError as error:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(error),
+            ) from error
 
     def start_interview(
         self,

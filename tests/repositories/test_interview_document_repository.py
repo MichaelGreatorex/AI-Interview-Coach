@@ -16,7 +16,7 @@ def create_session(db_session: Session, public_id: str) -> InterviewSession:
 	)
 
 
-def test_create_and_get_by_interview_session_id_return_saved_documents(
+def test_get_by_interview_session_id_returns_saved_documents(
 	db_session: Session,
 ) -> None:
 	session = create_session(db_session, "session-docs")
@@ -73,3 +73,52 @@ def test_delete_removes_document(db_session: Session) -> None:
 	db_session.commit()
 
 	assert repository.get_by_interview_session_id(session.id) == []
+
+
+def test_get_by_id_returns_saved_document(db_session: Session) -> None:
+	session = create_session(db_session, "session-get-by-id")
+	repository = InterviewDocumentRepository(db_session)
+	document = repository.create(
+		InterviewDocument(
+			interview_session_id=session.id,
+			document_type=DocumentType.CV,
+			original_filename="cv.pdf",
+			stored_filename="stored-cv.pdf",
+			mime_type="application/pdf",
+			file_size=10,
+			storage_path="/tmp/stored-cv.pdf",
+			extracted_text="Original text",
+		)
+	)
+
+	result = repository.get_by_id(document.id)
+
+	assert result is not None
+	assert result.id == document.id
+	assert result.extracted_text == "Original text"
+
+
+def test_update_persists_changed_extracted_text(db_session: Session) -> None:
+	session = create_session(db_session, "session-update-doc")
+	repository = InterviewDocumentRepository(db_session)
+	document = repository.create(
+		InterviewDocument(
+			interview_session_id=session.id,
+			document_type=DocumentType.CV,
+			original_filename="cv.pdf",
+			stored_filename="stored-cv.pdf",
+			mime_type="application/pdf",
+			file_size=10,
+			storage_path="/tmp/stored-cv.pdf",
+			extracted_text="Original text",
+		)
+	)
+
+	document.extracted_text = "Updated extracted text"
+	repository.update(document)
+
+	db_session.expire_all()
+	updated = repository.get_by_id(document.id)
+
+	assert updated is not None
+	assert updated.extracted_text == "Updated extracted text"

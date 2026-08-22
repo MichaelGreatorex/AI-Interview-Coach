@@ -31,6 +31,25 @@ class InterviewDocumentRepository:
         )
 
         return list(self._db.scalars(statement))
+    
+    def get_by_id(
+        self,
+        document_id: int,
+    ) -> InterviewDocument | None:
+        return self._db.get(
+            InterviewDocument,
+            document_id,
+        )
+
+
+    def update(
+        self,
+        interview_document: InterviewDocument,
+    ) -> InterviewDocument:
+        self._db.commit()
+        self._db.refresh(interview_document)
+
+        return interview_document
 
     def delete(
         self,
