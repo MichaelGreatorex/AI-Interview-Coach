@@ -3,19 +3,24 @@
 import { useState } from "react";
 
 import UploadView from "./UploadView";
+import DocumentReviewView from "./DocumentReviewView";
 import InterviewView from "./InterviewView";
 import CompleteView from "./CompleteView";
 
-import { ActiveInterview } from "../models/interview";
+import type { ActiveInterview, ProcessedInterview } from "../models/interview";
 import { submitResponse } from "../api/responses";
 import { deleteSession } from "../api/sessions";
 
 type InterviewStage =
     | "upload"
+    | "review"
     | "interview"
     | "complete";
 
 export default function InterviewApp() {
+    const [processedInterview, setProcessedInterview] =
+        useState<ProcessedInterview | null>(null);
+
     const [activeInterview, setActiveInterview] =
         useState<ActiveInterview | null>(null);
 
@@ -28,8 +33,24 @@ export default function InterviewApp() {
         case "upload":
             return (
                 <UploadView
+                    onDocumentsProcessed={(interview) => {
+                        setProcessedInterview(interview);
+                        setStage("review");
+                    }}
+                />
+            );
+        
+        case "review":
+            if (!processedInterview) {
+                return null;
+            }
+
+            return (
+                <DocumentReviewView
+                    interview={processedInterview}
                     onInterviewStarted={(interview) => {
                         setActiveInterview(interview);
+                        setProcessedInterview(null);
                         setStage("interview");
                     }}
                 />

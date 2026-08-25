@@ -1,15 +1,16 @@
 import { useState } from "react";
 
 import FileUploadCard from "./FileUploadCard";
-import { ActiveInterview } from "../models/interview";
+import type { ActiveInterview, ProcessedInterview } from "../models/interview";
 import { startInterview } from "../api/interviews";
+import { processDocuments } from "../api/documentprocess";
 
 type UploadViewProps = {
-    onInterviewStarted: (interview: ActiveInterview) => void;
+    onDocumentsProcessed: (interview: ProcessedInterview) => void;
 };
 
 export default function UploadView({
-    onInterviewStarted,
+    onDocumentsProcessed,
 }: UploadViewProps) {
     const [cv, setCv] = useState<File | null>(null);
     const [jobDescription, setJobDescription] = useState<File | null>(null);
@@ -27,8 +28,12 @@ export default function UploadView({
         setIsBusy(true);
         
         try {
-            const interview = await startInterview(cv, jobDescription);
-            onInterviewStarted(interview);
+            const processedInterview = await processDocuments(
+                cv,
+                jobDescription,
+            );
+
+onDocumentsProcessed(processedInterview);
         } catch (error) {
             console.error(error);
             setErrorMessage(
