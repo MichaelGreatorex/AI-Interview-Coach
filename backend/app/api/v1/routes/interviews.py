@@ -1,10 +1,14 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
-from app.schemas.update_interview_document_request import UpdateInterviewDocumentRequest
+
 from app.api.dependencies import InterviewWorkflowServiceDependency
+
+from app.storage.exceptions import FileTooLargeError
+
 from app.schemas.interview import InterviewStartResponse
 from app.schemas.interview_document import InterviewDocumentResponse
 from app.schemas.interview_document_processing import InterviewDocumentProcessingResponse
 from app.schemas.interview_question import InterviewQuestionResponse
+from app.schemas.update_interview_document_request import UpdateInterviewDocumentRequest
 
 router = APIRouter(
     prefix="/interviews",
@@ -21,10 +25,16 @@ def process_documents(
     cv: UploadFile = File(...),
     job_description: UploadFile = File(...),
 ) -> InterviewDocumentProcessingResponse:
-    result = workflow_service.process_documents(
-        cv_file=cv,
-        job_description_file=job_description,
-    )
+    try:
+        result = workflow_service.process_documents(
+            cv_file=cv,
+            job_description_file=job_description,
+        )
+    except FileTooLargeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=str(error),
+        ) from error
 
     return InterviewDocumentProcessingResponse(
         session_id=result.session.interview_session_id,
