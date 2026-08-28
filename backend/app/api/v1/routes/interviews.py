@@ -3,17 +3,13 @@ from app.schemas.update_interview_document_request import UpdateInterviewDocumen
 from app.api.dependencies import InterviewWorkflowServiceDependency
 from app.schemas.interview import InterviewStartResponse
 from app.schemas.interview_document import InterviewDocumentResponse
-from app.schemas.interview_document_processing import (
-    InterviewDocumentProcessingResponse,
-)
+from app.schemas.interview_document_processing import InterviewDocumentProcessingResponse
 from app.schemas.interview_question import InterviewQuestionResponse
-
 
 router = APIRouter(
     prefix="/interviews",
     tags=["Interviews"],
 )
-
 
 @router.post(
     "",
@@ -55,7 +51,6 @@ def update_document(
     )
 
     return InterviewDocumentResponse.model_validate(document)
-
 
 @router.post(
     "/{interview_session_id}/start",

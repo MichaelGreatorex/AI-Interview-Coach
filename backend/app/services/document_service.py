@@ -4,13 +4,12 @@ from pathlib import Path
 from app.models.enums import DocumentType
 from app.models.interview_document import InterviewDocument
 from app.models.interview_session import InterviewSession
-from app.repositories.interview_document_repository import (
-    InterviewDocumentRepository,
-)
-from app.repositories.interview_session_repository import (
-    InterviewSessionRepository,
-)
+
+from app.repositories.interview_document_repository import InterviewDocumentRepository
+from app.repositories.interview_session_repository import InterviewSessionRepository
+
 from app.storage.provider import StorageProvider
+
 from app.ai.document_understanding_service import DocumentUnderstandingService
 
 class DocumentService:
