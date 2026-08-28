@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
     
-    max_upload_size_bytes: int = 10 * 1024 * 1024
+    max_upload_size_bytes: int = 5 * 1024 * 1024
 
     openai_api_key: Optional[str] = None
     openai_document_model: str = "gpt-4.1-mini"

@@ -9,20 +9,18 @@ from app.ai.document_understanding_service import DocumentUnderstandingService
 from app.ai.openai_client import OpenAIClient, get_openai_client
 from app.core.config import settings
 from app.db.session import get_db
-from app.repositories.interview_document_repository import (
-    InterviewDocumentRepository,
-)
-from app.repositories.interview_response_repository import (
-    InterviewResponseRepository,
-)
-from app.repositories.interview_session_repository import (
-    InterviewSessionRepository,
-)
+
+from app.repositories.interview_document_repository import InterviewDocumentRepository
+from app.repositories.interview_response_repository import InterviewResponseRepository
+from app.repositories.interview_session_repository import InterviewSessionRepository
+
 from app.services.document_service import DocumentService
 from app.services.interview_engine import InterviewEngine
 from app.services.interview_response_service import InterviewResponseService
 from app.services.interview_session_service import InterviewSessionService
 from app.services.interview_workflow_service import InterviewWorkflowService
+from app.services.document_upload_validator import DocumentUploadValidator
+
 from app.storage.local_provider import LocalStorageProvider
 from app.storage.provider import StorageProvider
 
@@ -55,6 +53,9 @@ def get_storage_provider() -> StorageProvider:
         return LocalStorageProvider(uploads_dir=uploads_dir)
 
     return LocalStorageProvider()
+
+def get_document_upload_validator() -> DocumentUploadValidator:
+    return DocumentUploadValidator()
 
 
 def get_document_understanding_service(
@@ -122,6 +123,9 @@ def get_interview_workflow_service(
     document_service: DocumentService = Depends(
         get_document_service,
     ),
+    document_upload_validator: DocumentUploadValidator = Depends(
+        get_document_upload_validator,
+    ),
     response_service: InterviewResponseService = Depends(
         get_interview_response_service,
     ),
@@ -134,6 +138,7 @@ def get_interview_workflow_service(
         document_service=document_service,
         response_service=response_service,
         interview_engine=interview_engine,
+        document_upload_validator=document_upload_validator,
     )
 
 

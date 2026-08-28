@@ -1,25 +1,19 @@
-from fastapi import UploadFile
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, UploadFile
 
 from app.models.enums import DocumentType
 from app.models.interview_session import InterviewSession
-
-from app.schemas.submit_interview_response_request import SubmitInterviewResponseRequest
 from app.models.interview_document import InterviewDocument
 
 from app.services.document_service import DocumentService
 from app.services.interview_engine import InterviewEngine
 from app.services.interview_response_service import InterviewResponseService
 from app.services.interview_session_service import InterviewSessionService
-
-from app.services.models.interview_document_processing_result import (
-    InterviewDocumentProcessingResult,
-)
+from app.services.document_upload_validator import DocumentUploadValidator
+from app.services.models.interview_document_processing_result import InterviewDocumentProcessingResult
 from app.services.models.interview_start_result import InterviewStartResult
 
-from app.schemas.submit_interview_response_response import (
-    SubmitInterviewResponseResponse,
-)
+from app.schemas.submit_interview_response_response import SubmitInterviewResponseResponse
+from app.schemas.submit_interview_response_request import SubmitInterviewResponseRequest
 
 
 class InterviewWorkflowService:
@@ -30,17 +24,22 @@ class InterviewWorkflowService:
         document_service: DocumentService,
         response_service: InterviewResponseService,
         interview_engine: InterviewEngine,
+        document_upload_validator: DocumentUploadValidator,
     ) -> None:
         self._session_service = session_service
         self._document_service = document_service
         self._response_service = response_service
         self._interview_engine = interview_engine
+        self._document_upload_validator = document_upload_validator
 
     def process_documents(
         self,
         cv_file: UploadFile,
         job_description_file: UploadFile,
     ) -> InterviewDocumentProcessingResult:
+
+        self._document_upload_validator.validate(cv_file)
+        self._document_upload_validator.validate(job_description_file)
 
         session = self._session_service.create_session()
 

@@ -29,6 +29,7 @@ def test_process_documents_creates_session_and_processes_both_documents() -> Non
     document_service = Mock()
     interview_engine = Mock()
     response_service = Mock()
+    document_upload_validator = Mock()
 
     session = create_session()
 
@@ -47,6 +48,7 @@ def test_process_documents_creates_session_and_processes_both_documents() -> Non
         document_service=document_service,
         response_service=response_service,
         interview_engine=interview_engine,
+        document_upload_validator=document_upload_validator,
     )
 
     cv_file = create_upload_file("cv.pdf")
@@ -58,6 +60,10 @@ def test_process_documents_creates_session_and_processes_both_documents() -> Non
     )
 
     session_service.create_session.assert_called_once_with()
+    assert document_upload_validator.validate.call_args_list == [
+        call(cv_file),
+        call(job_description_file),
+    ]
 
     assert document_service.upload_document_for_session.call_args_list == [
         call(
