@@ -1,9 +1,14 @@
 import pytest
 
+from pathlib import Path
+
+from fastapi.testclient import TestClient
+
 from app.core.config import settings
-from app.services.document_upload_validator import DocumentUploadValidator
+from app.storage.document_upload_validator import DocumentUploadValidator
 from app.storage.exceptions import FileTooLargeError
 from app.storage.prepared_upload import PreparedUpload
+from app.storage.document_content_validator import DocumentContentValidator
 
 
 def create_prepared_upload(
@@ -20,11 +25,13 @@ def create_prepared_upload(
 
 
 def test_validate_accepts_valid_cv_upload() -> None:
-    validator = DocumentUploadValidator()
+    validator = DocumentUploadValidator(
+    document_content_validator=DocumentContentValidator(),
+)
 
     cv_file = create_prepared_upload(
         filename="cv.pdf",
-        content=b"candidate cv content",
+        content=b"%PDF-1.7\n",
         content_type="application/pdf",
     )
 
@@ -32,11 +39,13 @@ def test_validate_accepts_valid_cv_upload() -> None:
 
 
 def test_validate_accepts_valid_job_description_upload() -> None:
-    validator = DocumentUploadValidator()
+    validator = DocumentUploadValidator(
+        document_content_validator=DocumentContentValidator(),
+    )
 
     job_description_file = create_prepared_upload(
         filename="job-description.docx",
-        content=b"job description content",
+        content=b"PK\x03\x04",
         content_type=(
             "application/vnd.openxmlformats-officedocument."
             "wordprocessingml.document"
@@ -49,7 +58,9 @@ def test_validate_accepts_valid_job_description_upload() -> None:
 def test_validate_rejects_oversized_file(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    validator = DocumentUploadValidator()
+    validator = DocumentUploadValidator(
+        document_content_validator=DocumentContentValidator(),
+    )
 
     monkeypatch.setattr(
         settings,
@@ -68,7 +79,9 @@ def test_validate_rejects_oversized_file(
 
 
 def test_validate_rejects_empty_file() -> None:
-    validator = DocumentUploadValidator()
+    validator = DocumentUploadValidator(
+        document_content_validator=DocumentContentValidator(),
+    )
 
     empty_file = create_prepared_upload(
         filename="cv.pdf",
@@ -81,7 +94,9 @@ def test_validate_rejects_empty_file() -> None:
 
 
 def test_validate_rejects_malformed_upload_without_content_type() -> None:
-    validator = DocumentUploadValidator()
+    validator = DocumentUploadValidator(
+        document_content_validator=DocumentContentValidator(),
+    )
 
     malformed_file = create_prepared_upload(
         filename="cv.pdf",
@@ -94,7 +109,9 @@ def test_validate_rejects_malformed_upload_without_content_type() -> None:
 
 
 def test_validate_rejects_malformed_upload_with_blank_filename() -> None:
-    validator = DocumentUploadValidator()
+    validator = DocumentUploadValidator(
+        document_content_validator=DocumentContentValidator(),
+    )
 
     malformed_file = create_prepared_upload(
         filename="   ",

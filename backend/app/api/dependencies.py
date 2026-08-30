@@ -19,8 +19,9 @@ from app.services.interview_engine import InterviewEngine
 from app.services.interview_response_service import InterviewResponseService
 from app.services.interview_session_service import InterviewSessionService
 from app.services.interview_workflow_service import InterviewWorkflowService
-from app.services.document_upload_validator import DocumentUploadValidator
 
+from app.storage.document_upload_validator import DocumentUploadValidator
+from app.storage.document_content_validator import DocumentContentValidator
 from app.storage.upload_preparer import UploadPreparer
 from app.storage.local_provider import LocalStorageProvider
 from app.storage.provider import StorageProvider
@@ -55,8 +56,17 @@ def get_storage_provider() -> StorageProvider:
 
     return LocalStorageProvider()
 
-def get_document_upload_validator() -> DocumentUploadValidator:
-    return DocumentUploadValidator()
+def get_document_content_validator() -> DocumentContentValidator:
+    return DocumentContentValidator()
+
+def get_document_upload_validator(
+    document_content_validator: DocumentContentValidator = Depends(
+        get_document_content_validator,
+    ),
+) -> DocumentUploadValidator:
+    return DocumentUploadValidator(
+        document_content_validator=document_content_validator,
+    )
 
 def get_upload_preparer() -> UploadPreparer:
     return UploadPreparer()

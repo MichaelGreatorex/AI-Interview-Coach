@@ -2,15 +2,12 @@ from unittest.mock import Mock
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.models.enums import DocumentType
 from app.models.interview_session import InterviewStatus, InterviewSession
-from app.repositories.interview_document_repository import (
-    InterviewDocumentRepository,
-)
-from app.repositories.interview_session_repository import (
-    InterviewSessionRepository,
-)
+from app.repositories.interview_document_repository import InterviewDocumentRepository
+from app.repositories.interview_session_repository import InterviewSessionRepository
 from app.models.interview_document import InterviewDocument
 
 
@@ -250,3 +247,36 @@ def test_update_document_text_returns_404_for_missing_document(
 
     assert response.status_code == 404
     assert response.json()["detail"] == ("Interview document '999999' does not exist")
+
+
+def test_process_documents_rejects_content_mismatch_without_creating_session(
+    ai_test_client: TestClient,
+    db_session: Session,
+) -> None:
+    response = ai_test_client.post(
+        "/api/v1/interviews",
+        files={
+            "cv": (
+                "cv.pdf",
+                b"this is not a PDF",
+                "application/pdf",
+            ),
+            "job_description": (
+                "job-description.txt",
+                b"Software engineer role requirements",
+                "text/plain",
+            ),
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "Invalid document upload",
+    }
+
+    sessions = db_session.scalars(
+        select(InterviewSession)
+    ).all()
+
+    assert sessions == []
+    

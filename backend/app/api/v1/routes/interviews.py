@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from app.api.dependencies import InterviewWorkflowServiceDependency
 
-from app.storage.exceptions import FileTooLargeError
+from app.storage.exceptions import FileTooLargeError, InvalidDocumentUploadError
 
 from app.schemas.interview import InterviewStartResponse
 from app.schemas.interview_document import InterviewDocumentResponse
@@ -34,6 +34,11 @@ def process_documents(
         raise HTTPException(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=str(error),
+        ) from error
+    except InvalidDocumentUploadError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid document upload",
         ) from error
 
     return InterviewDocumentProcessingResponse(

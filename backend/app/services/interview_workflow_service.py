@@ -8,7 +8,7 @@ from app.services.document_service import DocumentService
 from app.services.interview_engine import InterviewEngine
 from app.services.interview_response_service import InterviewResponseService
 from app.services.interview_session_service import InterviewSessionService
-from app.services.document_upload_validator import DocumentUploadValidator
+from backend.app.storage.document_upload_validator import DocumentUploadValidator
 from app.services.models.interview_document_processing_result import InterviewDocumentProcessingResult
 from app.services.models.interview_start_result import InterviewStartResult
 
