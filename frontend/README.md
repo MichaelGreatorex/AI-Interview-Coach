@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend
 
-## Getting Started
+This package provides the interview client for AI Interview Coach.
 
-First, run the development server:
+## Current Functionality
+
+The application runs a complete multi-stage interview workflow:
+
+1. Upload stage
+- Upload CV and job description files.
+- Sends multipart form data to backend document-processing endpoint.
+
+2. Review stage
+- Displays extracted text for both documents.
+- Allows user corrections before interview starts.
+- Persists edits via backend document update endpoint.
+
+3. Interview stage
+- Displays current question.
+- Submits answers and advances using backend progression response.
+
+4. Complete stage
+- Shows completion view.
+- Ends and deletes the interview session on user action.
+
+## API Integration
+
+The frontend integrates with these backend paths under API base URL:
+
+- POST /interviews
+- PATCH /interviews/{interview_session_id}/documents/{document_id}
+- POST /interviews/{interview_session_id}/start
+- POST /sessions/{interview_session_id}/responses
+- DELETE /sessions/{interview_session_id}
+
+Base URL is configured through NEXT_PUBLIC_API_BASE_URL.
+
+## Secure by Design
+
+1. Explicit request timeouts for long-running actions
+- Why: Prevent hanging user operations and reduce retry storms.
+- How: AbortController-based timeout controls in document processing and response submission.
+- Effect: Predictable failure paths and better resilience under network degradation.
+
+2. Controlled stage transitions
+- Why: Prevent invalid UI states and accidental repeated submissions.
+- How: Busy-state guards and submission locks around critical actions.
+- Effect: Lower risk of duplicate requests and race-condition style UX failures.
+
+3. Server-authoritative interview progression
+- Why: Client state should not be trusted for interview flow decisions.
+- How: Next question and completion status are always derived from backend responses.
+- Effect: Tampering resistance and consistent business logic.
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Default local URL: http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- npm run dev
+- npm run build
+- npm run start
+- npm run lint

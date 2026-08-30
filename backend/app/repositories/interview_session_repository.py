@@ -1,9 +1,6 @@
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.interview_session import InterviewSession
-from app.db import session
-from app.models.interview_document import InterviewDocument
 
 
 class InterviewSessionRepository:

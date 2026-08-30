@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 from typing import Literal, Optional, Union
 
 from pydantic import Field, field_validator, model_validator
@@ -75,10 +76,43 @@ class Settings(BaseSettings):
 
         return self
 
+    @model_validator(mode="after")
+    def validate_production_requirements(self) -> "Settings":
+        if self.environment != "production":
+            return self
+
+        if self.openai_api_key is None:
+            raise ValueError(
+                "OPENAI_API_KEY must be set in production",
+            )
+
+        if self.database_url is None:
+            raise ValueError(
+                "Database configuration must be set in production",
+            )
+
+        return self
+
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def parse_allowed_origins(cls, value: Union[str, list[str]]) -> list[str]:
         if isinstance(value, str):
+            stripped = value.strip()
+
+            if stripped.startswith("["):
+                parsed = json.loads(stripped)
+
+                if not isinstance(parsed, list):
+                    raise ValueError(
+                        "allowed_origins JSON value must be a list",
+                    )
+
+                return [
+                    str(origin).strip()
+                    for origin in parsed
+                    if str(origin).strip()
+                ]
+
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 

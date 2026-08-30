@@ -35,6 +35,25 @@ class InterviewWorkflowService:
         self._document_upload_validator = document_upload_validator
         self._upload_preparer = upload_preparer
 
+    def _get_session_or_404(
+        self,
+        interview_session_id: str,
+    ) -> InterviewSession:
+        session = self._session_service.get_by_public_id(
+            interview_session_id,
+        )
+
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=(
+                    f"Interview session "
+                    f"'{interview_session_id}' does not exist"
+                ),
+            )
+
+        return session
+
     def process_documents(
         self,
         cv_file: UploadFile,
@@ -79,18 +98,7 @@ class InterviewWorkflowService:
         document_id: int,
         extracted_text: str,
     ) -> InterviewDocument:
-        session = self._session_service.get_by_public_id(
-            interview_session_id,
-        )
-
-        if session is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=(
-                    f"Interview session "
-                    f"'{interview_session_id}' does not exist"
-                ),
-            )
+        session = self._get_session_or_404(interview_session_id)
 
         try:
             return self._document_service.update_extracted_text(
@@ -108,18 +116,7 @@ class InterviewWorkflowService:
         self,
         interview_session_id: str,
     ) -> InterviewStartResult:
-        session = self._session_service.get_by_public_id(
-            interview_session_id,
-        )
-
-        if session is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=(
-                    f"Interview session "
-                    f"'{interview_session_id}' does not exist"
-                ),
-            )
+        session = self._get_session_or_404(interview_session_id)
 
         question = self._interview_engine.get_first_question()
 
@@ -140,19 +137,7 @@ class InterviewWorkflowService:
         interview_session_id: str,
         request: SubmitInterviewResponseRequest,
     ) -> SubmitInterviewResponseResponse:
-
-        session = self._session_service.get_by_public_id(
-            interview_session_id,
-        )
-
-        if session is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=(
-                    f"Interview session "
-                    f"'{interview_session_id}' does not exist"
-                ),
-            )
+        session = self._get_session_or_404(interview_session_id)
 
         self._response_service.save_response(
             session.id,

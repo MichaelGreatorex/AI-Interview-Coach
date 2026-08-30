@@ -1,6 +1,5 @@
-from app.core.config import settings
-from app.storage.exceptions import FileTooLargeError
 from app.storage.prepared_upload import PreparedUpload
+from app.storage.upload_size import validate_upload_size
 
 
 class DocumentUploadValidator:
@@ -25,11 +24,7 @@ class DocumentUploadValidator:
                 "Uploaded document must not be empty"
             )
 
-        if upload.file_size > settings.max_upload_size_bytes:
-            raise FileTooLargeError(
-                "File exceeds maximum allowed size of "
-                f"{settings.max_upload_size_bytes} bytes"
-            )
+        validate_upload_size(upload.file_size)
 
     @staticmethod
     def _validate_content_type(upload: PreparedUpload) -> None:

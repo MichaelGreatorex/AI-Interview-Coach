@@ -1,17 +1,33 @@
 # Docs
 
-This directory contains architecture decision records (ADRs) and technical documentation for the AI Interview Coach platform.
+This directory is reserved for architecture and design documentation that supports implementation in this repository.
 
-## Structure
+## What belongs here
 
-```
+- Architecture Decision Records
+- Sequence diagrams and workflow diagrams
+- Security design notes and threat-model summaries
+- Operational runbooks for deployment and incident handling
+
+## Recommended structure
+
+Create and maintain the following folders as documentation grows:
+
+```text
 docs/
-├── adr/          → Architecture Decision Records
-└── diagrams/     → System architecture diagrams
+	adr/
+	diagrams/
+	security/
+	runbooks/
 ```
 
-## Architecture Decision Records
+## Secure by Design documentation expectations
 
-ADRs document significant technical decisions, including context, the decision made, and its consequences. New ADRs should be numbered sequentially (e.g. `adr/001-use-fastapi.md`).
+When introducing security-sensitive behavior, capture:
 
-> **Note:** This directory is a placeholder. Documentation will be added in a subsequent PR.
+1. Threat addressed
+2. Control selected
+3. Why this control was chosen over alternatives
+4. Residual risk and monitoring plan
+
+This keeps the security posture reviewable as features evolve from deterministic flow to richer AI-assisted capabilities.

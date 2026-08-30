@@ -3,71 +3,85 @@
 [![Backend CI](https://github.com/MichaelGreatorex/AI-Interview-Coach/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/MichaelGreatorex/AI-Interview-Coach/actions/workflows/backend-ci.yml)
 [![Backend CD](https://img.shields.io/website?down_color=red&down_message=down&label=CD%20Production&up_color=brightgreen&up_message=live&url=http%3A%2F%2Faiic-prod-alb-925692489.eu-west-2.elb.amazonaws.com)](http://aiic-prod-alb-925692489.eu-west-2.elb.amazonaws.com)
 
-AI Interview Coach is being developed into a full AI-powered interview preparation platform that takes a candidates CV and the JD for the job they are applying for and generates a personalised interview simulation based on both documents. 
+AI Interview Coach is being developed into a full AI-powered interview preparation platform. The long-term target is personalized interview simulation using candidate CV and job description context.
 
-```
-Please note: this AI Layer is a feature that is under current development and not included in the latest v0.1.0 Release.
-```
+Today, the repository ships a stable, test-covered interview workflow foundation with document upload, review, interview progression, and infrastructure automation.
 
-## Status
+## Current Implementation
 
-The repository now contains a working, test-covered interview workflow foundation and Terraform-based AWS infrastructure.
+- FastAPI backend with session lifecycle endpoints and response progression logic.
+- Next.js frontend with multi-stage flow: upload, review extracted text, interview, complete.
+- PostgreSQL persistence via SQLAlchemy and Alembic.
+- Local file storage provider for uploaded documents.
+- Terraform configuration for ECS, ALB, RDS, IAM, networking, and ECR.
 
-Current implementation includes:
+## Current API
 
-- FastAPI backend with session lifecycle and response submission endpoints.
-- Next.js frontend scaffold and local development runtime.
-- PostgreSQL persistence via SQLAlchemy + Alembic migrations.
-- Local document storage provider used during interview startup.
-- Infrastructure as Code in Terraform for core AWS services.
+Base path: /api/v1
 
-Planned AI features are kept in the roadmap below and are not yet implemented.
+- GET /health
+- POST /interviews
+  - Accepts multipart CV and job description uploads.
+  - Creates a new session and stores both documents.
+- PATCH /interviews/{interview_session_id}/documents/{document_id}
+  - Updates extracted document text before interview start.
+- POST /interviews/{interview_session_id}/start
+  - Starts interview and returns first question.
+- POST /sessions/{interview_session_id}/responses
+  - Saves response and returns interview state:
+    - interview_complete
+    - next_question
+- DELETE /sessions/{interview_session_id}
+  - Deletes session and associated document/response data.
 
-## Current Backend API
+Interview questions currently come from deterministic internal logic and seeded question data. AI-generated questioning remains part of the roadmap.
 
-Base path: `/api/v1`
+## Secure by Design
 
-- `GET /health`: health check.
-- `POST /interviews`: starts an interview session from uploaded CV and job description files.
-- `POST /sessions/{interview_session_id}/responses`: saves an answer and returns interview progression state (`interview_complete`, `next_question`).
-- `DELETE /sessions/{interview_session_id}`: deletes a session and related stored data.
+Security controls already applied in the current implementation:
 
-Interview questions are currently served by an internal static question set and deterministic interview engine logic.
+1. Strict upload validation
+- Why: Uploaded files are a high-risk input boundary.
+- How: Files are prepared once, then validated for filename, size, and allowlisted MIME types before session creation.
+- Effect: Malformed, empty, oversized, or unsupported uploads are rejected early.
 
-## Infrastructure As Code (Terraform)
+2. Centralized file size enforcement
+- Why: Security checks duplicated in many places tend to drift.
+- How: Shared upload-size validation is used in both upload preparation and validator layers.
+- Effect: One source of truth for max-size behavior and error handling.
 
-The `infra/` directory now contains active Terraform configuration for AWS provisioning.
+3. Explicit CORS allowlist parsing
+- Why: Overly broad origin handling can expose APIs to unauthorized browser contexts.
+- How: allowed_origins supports controlled comma-separated and JSON-array configuration formats.
+- Effect: CORS rules stay explicit and predictable across local and deployed environments.
 
-Implemented resources include:
+4. Production fail-fast configuration
+- Why: Missing secrets should fail at startup, not during runtime requests.
+- How: Production settings require database configuration and OpenAI key.
+- Effect: Misconfigured production deployments fail safely and quickly.
 
-- VPC networking: VPC, public/private subnets, internet gateway, NAT gateway, and route tables.
-- Security groups: ALB, frontend ECS service, backend ECS service, and RDS access controls.
-- Compute: ECS cluster, backend and frontend task definitions, backend and frontend ECS services.
-- Load balancing: ALB, listeners, routing rules, backend/frontend target groups.
-- Data and persistence: PostgreSQL RDS instance and DB subnet group.
-- Container registry: ECR repositories for backend and frontend images.
-- Observability: CloudWatch log group for ECS services.
-- IAM: task execution role plus Secrets Manager access policy for DB credentials.
+5. Network segmentation in AWS
+- Why: Reduce attack surface and lateral movement opportunities.
+- How: ECS services run in private subnets, RDS is not publicly accessible, and security groups restrict access paths.
+- Effect: Backend and database are reachable only through intended service boundaries.
 
-## CI/CD
-
-GitHub Actions workflow: `.github/workflows/backend-ci.yml`
-
-- Pull requests run CI checks (compose build, migrations, backend tests).
-- Pushes to `main` and `develop` run the same pipeline and act as the current delivery gate.
+6. Secret handling through AWS-managed secret references
+- Why: Avoid hardcoding sensitive credentials in task definitions.
+- How: ECS backend task pulls DB password from managed secret material with scoped IAM permission.
+- Effect: Lower credential exposure risk in runtime configuration.
 
 ## Local Development
 
-### Runtime Requirements
+### Requirements
 
 - Docker Desktop with Docker Compose
 
 Optional host tooling:
 
-- Python `3.14` (for direct local pytest/alembic workflows)
-- Node.js `24.18.0` and npm `11.16.0` (for direct frontend workflows)
+- Python 3.14 for direct local pytest and Alembic workflows
+- Node.js 24.18.0 and npm 11.16.0 for direct frontend workflows
 
-### Start Full Stack
+### Start full stack
 
 From repository root:
 
@@ -75,43 +89,36 @@ From repository root:
 docker compose up --build
 ```
 
-Services:
+Service endpoints:
 
-- Postgres: `127.0.0.1:5432`
-- Backend (FastAPI): `http://127.0.0.1:8000`
-- Frontend (Next.js): `http://127.0.0.1:3000`
+- Postgres: 127.0.0.1:5432
+- Backend: http://127.0.0.1:8000
+- Frontend: http://127.0.0.1:3000
 
-Stop stack:
+Stop:
 
 ```bash
 docker compose down
 ```
 
-Reset volumes:
+Reset local volumes:
 
 ```bash
 docker compose down -v
 ```
 
-### Convenience Scripts
-
-All services:
+### Convenience commands
 
 ```bash
-./scripts/dev-stack.sh up
-./scripts/dev-stack.sh status
-./scripts/dev-stack.sh down
+make up
+make down
+make test
+make migrate
+make revision
+make logs
 ```
 
-Postgres only:
-
-```bash
-./scripts/postgres.sh up
-./scripts/postgres.sh status
-./scripts/postgres.sh down
-```
-
-### Run Backend Tests
+### Run tests
 
 ```bash
 cd backend
@@ -119,123 +126,24 @@ source .venv/bin/activate
 python -m pytest -vv ../tests
 ```
 
-### Alembic Migrations
-
-Containerized:
-
-```bash
-docker compose run --rm backend alembic upgrade head
-docker compose run --rm backend alembic current
-```
-
-Local environment:
-
-```bash
-cd backend
-source .venv/bin/activate
-export DATABASE_URL=postgresql://ai_interview:ai_interview_dev_password@127.0.0.1:5432/ai_interview_coach
-alembic revision --autogenerate -m "describe your change"
-alembic upgrade head
-```
-
-## Tech Stack
-
-### Frontend
-
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-
-### Backend
-
-- Python
-- FastAPI
-- SQLAlchemy
-- Alembic
-- Pydantic
-- pytest
-
-### Infrastructure
-
-- Terraform
-- AWS ECS (Fargate)
-- AWS ALB
-- AWS ECR
-- AWS RDS (PostgreSQL)
-- AWS CloudWatch
-
 ## Repository Layout
 
 ```text
-/frontend            Next.js UI
-/backend             FastAPI application
-/backend/alembic     Database migrations
-/infra               Terraform AWS infrastructure
-/tests               API, unit, repository, and integration tests
-/docs                Project documentation
+/frontend            Next.js application
+/backend             FastAPI application and migrations
+/tests               Unit, API, repository, and integration tests
+/infra               Terraform for AWS deployment
+/docs                Architecture and supporting documentation
+/prompts             Prompt templates and prompt guidance
+/shared              Cross-layer shared assets and contracts
 ```
 
-## Current workflow:
-```
-Upload
-  │
-  ▼
-WorkflowService.process_documents()
-  ├── SessionService.create_session()
-  ├── DocumentService.upload_document()
-  └── DocumentService.upload_document()
-        │
-        ▼
-    Inspect View
+## Roadmap
 
+The long-term product direction remains unchanged:
 
-Start
-  │
-  ▼
-WorkflowService.start_interview()
-  ├── InterviewEngine.get_first_question()
-  └── SessionService.activate_session()
-        │
-        ▼
-    Question 1
-
-
-Submit answer
-  │
-  ▼
-WorkflowService.submit_response()
-  ├── ResponseService.save_response()
-  ├── ResponseService.get_responses()
-  ├── InterviewEngine.get_next_question()
-  └── SessionService.update_status()
-        │
-        ├── next question
-        └── completed → cleanup
-```
-
-## Dependencies
-```
-InterviewSessionService
-    ├── InterviewSessionRepository
-    └── DocumentService
-
-InterviewResponseService
-    └── InterviewResponseRepository
-
-InterviewWorkflowService
-    ├── InterviewSessionService
-    ├── DocumentService
-    ├── InterviewResponseService
-    └── InterviewEngine
-```
-
-## Roadmap (Planned AI Interview Coach Features)
-
-These are planned target capabilities and remain part of the project direction:
-
-- CV parsing and job-description understanding with AI assistance.
-- AI-generated, role-specific interview questions.
-- AI-based answer scoring and structured feedback (for example, clarity, depth, relevance, STAR structure).
-- Personalized coaching loops and progress tracking over time.
-- Adaptive difficulty, multi-interviewer simulation, and voice-based interview flows.
+- CV and job description understanding with AI assistance
+- AI-generated role-specific interview questions
+- AI answer scoring and structured coaching feedback
+- Personalized progression tracking and adaptive interview difficulty
+- Extended interview modalities including richer simulation experiences

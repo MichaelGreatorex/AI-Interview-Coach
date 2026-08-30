@@ -1,8 +1,8 @@
 from fastapi import UploadFile
 
 from app.core.config import settings
-from app.storage.exceptions import FileTooLargeError
 from app.storage.prepared_upload import PreparedUpload
+from app.storage.upload_size import validate_upload_size
 
 
 class UploadPreparer:
@@ -14,15 +14,10 @@ class UploadPreparer:
         content = file.file.read(
             settings.max_upload_size_bytes + 1
         )
-
-        if len(content) > settings.max_upload_size_bytes:
-            raise FileTooLargeError(
-                "File exceeds maximum allowed size of "
-                f"{settings.max_upload_size_bytes} bytes"
-            )
+        validate_upload_size(len(content))
 
         return PreparedUpload(
-            filename=file.filename or "upload",
+            filename=file.filename if file.filename is not None else "",
             content_type=file.content_type,
             content=content,
         )
