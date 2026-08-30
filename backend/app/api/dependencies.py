@@ -21,6 +21,7 @@ from app.services.interview_session_service import InterviewSessionService
 from app.services.interview_workflow_service import InterviewWorkflowService
 from app.services.document_upload_validator import DocumentUploadValidator
 
+from app.storage.upload_preparer import UploadPreparer
 from app.storage.local_provider import LocalStorageProvider
 from app.storage.provider import StorageProvider
 
@@ -56,6 +57,9 @@ def get_storage_provider() -> StorageProvider:
 
 def get_document_upload_validator() -> DocumentUploadValidator:
     return DocumentUploadValidator()
+
+def get_upload_preparer() -> UploadPreparer:
+    return UploadPreparer()
 
 
 def get_document_understanding_service(
@@ -126,6 +130,9 @@ def get_interview_workflow_service(
     document_upload_validator: DocumentUploadValidator = Depends(
         get_document_upload_validator,
     ),
+    upload_preparer: UploadPreparer = Depends(
+        get_upload_preparer,
+    ),
     response_service: InterviewResponseService = Depends(
         get_interview_response_service,
     ),
@@ -139,6 +146,7 @@ def get_interview_workflow_service(
         response_service=response_service,
         interview_engine=interview_engine,
         document_upload_validator=document_upload_validator,
+        upload_preparer=upload_preparer,
     )
 
 

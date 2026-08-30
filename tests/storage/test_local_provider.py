@@ -9,44 +9,24 @@ import pytest
 from app.core.config import settings
 
 from app.storage.local_provider import LocalStorageProvider
-from app.storage.exceptions import FileTooLargeError
+from app.storage.prepared_upload import PreparedUpload
 
-def test_store_rejects_file_over_size_limit(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        settings,
-        "max_upload_size_bytes",
-        10,
-    )
-
-    provider = LocalStorageProvider(tmp_path)
-
-    file = UploadFile(
-        filename="large.txt",
-        file=io.BytesIO(b"12345678901"),
-    )
-
-    with pytest.raises(
-        FileTooLargeError,
-        match="maximum allowed size",
-    ):
-        provider.store(file)
-
-    assert list(tmp_path.iterdir()) == []
-
-def create_upload_file() -> UploadFile:
-    return UploadFile(
+def create_prepared_upload() -> PreparedUpload:
+    return PreparedUpload(
         filename="cv.pdf",
-        file=BytesIO(b"My fake CV"),
-        headers={"content-type": "application/pdf"},
+        content=b"My fake CV",
+        content_type="application/pdf",
     )
 
 
-def test_store_writes_upload_and_returns_metadata(tmp_path: Path) -> None:
-    provider = LocalStorageProvider(uploads_dir=tmp_path / "storage" / "uploads")
-    upload = create_upload_file()
+def test_store_writes_upload_and_returns_metadata(
+    tmp_path: Path,
+) -> None:
+    provider = LocalStorageProvider(
+        uploads_dir=tmp_path / "storage" / "uploads",
+    )
+
+    upload = create_prepared_upload()
 
     stored = provider.store(upload)
 

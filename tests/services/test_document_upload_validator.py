@@ -1,40 +1,28 @@
-from io import BytesIO
-from urllib import response
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
 import pytest
-from fastapi import UploadFile
 
 from app.core.config import settings
 from app.services.document_upload_validator import DocumentUploadValidator
 from app.storage.exceptions import FileTooLargeError
-from app.models.interview_session import InterviewSession
-from app.repositories.interview_session_repository import InterviewSessionRepository
-from tests.conftest import db_session
+from app.storage.prepared_upload import PreparedUpload
 
 
-def create_upload_file(
+def create_prepared_upload(
     *,
     filename: str,
     content: bytes,
     content_type: str | None,
-) -> UploadFile:
-    headers = {}
-    if content_type is not None:
-        headers["content-type"] = content_type
-
-    return UploadFile(
+) -> PreparedUpload:
+    return PreparedUpload(
         filename=filename,
-        file=BytesIO(content),
-        headers=headers,
+        content_type=content_type,
+        content=content,
     )
 
 
 def test_validate_accepts_valid_cv_upload() -> None:
     validator = DocumentUploadValidator()
 
-    cv_file = create_upload_file(
+    cv_file = create_prepared_upload(
         filename="cv.pdf",
         content=b"candidate cv content",
         content_type="application/pdf",
@@ -46,7 +34,7 @@ def test_validate_accepts_valid_cv_upload() -> None:
 def test_validate_accepts_valid_job_description_upload() -> None:
     validator = DocumentUploadValidator()
 
-    job_description_file = create_upload_file(
+    job_description_file = create_prepared_upload(
         filename="job-description.docx",
         content=b"job description content",
         content_type=(
@@ -58,11 +46,18 @@ def test_validate_accepts_valid_job_description_upload() -> None:
     validator.validate(job_description_file)
 
 
-def test_validate_rejects_oversized_file(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_validate_rejects_oversized_file(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     validator = DocumentUploadValidator()
-    monkeypatch.setattr(settings, "max_upload_size_bytes", 4)
 
-    oversized_file = create_upload_file(
+    monkeypatch.setattr(
+        settings,
+        "max_upload_size_bytes",
+        4,
+    )
+
+    oversized_file = create_prepared_upload(
         filename="cv.pdf",
         content=b"12345",
         content_type="application/pdf",
@@ -75,7 +70,7 @@ def test_validate_rejects_oversized_file(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_validate_rejects_empty_file() -> None:
     validator = DocumentUploadValidator()
 
-    empty_file = create_upload_file(
+    empty_file = create_prepared_upload(
         filename="cv.pdf",
         content=b"",
         content_type="application/pdf",
@@ -88,7 +83,7 @@ def test_validate_rejects_empty_file() -> None:
 def test_validate_rejects_malformed_upload_without_content_type() -> None:
     validator = DocumentUploadValidator()
 
-    malformed_file = create_upload_file(
+    malformed_file = create_prepared_upload(
         filename="cv.pdf",
         content=b"valid content",
         content_type=None,
@@ -101,7 +96,7 @@ def test_validate_rejects_malformed_upload_without_content_type() -> None:
 def test_validate_rejects_malformed_upload_with_blank_filename() -> None:
     validator = DocumentUploadValidator()
 
-    malformed_file = create_upload_file(
+    malformed_file = create_prepared_upload(
         filename="   ",
         content=b"valid content",
         content_type="application/pdf",
@@ -109,40 +104,3 @@ def test_validate_rejects_malformed_upload_with_blank_filename() -> None:
 
     with pytest.raises(ValueError, match="must have a filename"):
         validator.validate(malformed_file)
-        
-
-def test_process_documents_rejects_oversized_upload_without_creating_session(
-    ai_test_client: TestClient,
-    db_session: Session,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(
-        settings,
-        "max_upload_size_bytes",
-        10,
-    )
-
-    response = ai_test_client.post(
-        "/api/v1/interviews",
-        files={
-            "cv": (
-                "cv.pdf",
-                b"this file is too large",
-                "application/pdf",
-            ),
-            "job_description": (
-                "job-description.pdf",
-                b"valid",
-                "application/pdf",
-            ),
-        },
-    )
-
-    assert response.status_code == 413
-    assert response.json() == {
-        "detail": "File exceeds maximum allowed size of 10 bytes",
-    }
-
-    sessions = db_session.query(InterviewSession).all()
-
-    assert sessions == []

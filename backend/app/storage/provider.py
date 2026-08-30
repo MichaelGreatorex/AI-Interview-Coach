@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 
-from fastapi import UploadFile
-
 from app.storage.models import StoredFile
+from app.storage.prepared_upload import PreparedUpload
 
 
 class StorageProvider(ABC):
@@ -10,11 +9,11 @@ class StorageProvider(ABC):
     @abstractmethod
     def store(
         self,
-        file: UploadFile,
+        upload: PreparedUpload,
     ) -> StoredFile:
-        """Persist a file and return its metadata."""
+        """Persist a prepared upload and return its metadata."""
         raise NotImplementedError
-    
+
     @abstractmethod
     def delete(
         self,

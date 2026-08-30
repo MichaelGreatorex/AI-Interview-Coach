@@ -1,4 +1,4 @@
-from fastapi import UploadFile
+from app.storage.prepared_upload import PreparedUpload
 from pathlib import Path
 
 from app.models.enums import DocumentType
@@ -29,7 +29,7 @@ class DocumentService:
         self,
         interview_session_id: str,
         document_type: DocumentType,
-        file: UploadFile,
+        upload: PreparedUpload,
     ) -> InterviewDocument:
 
         session = self._session_repository.get_by_public_id(
@@ -44,7 +44,7 @@ class DocumentService:
         return self.upload_document_for_session(
             session=session,
             document_type=document_type,
-            file=file,
+            upload=upload,
         )
 
     
@@ -52,10 +52,10 @@ class DocumentService:
         self,
         session: InterviewSession,
         document_type: DocumentType,
-        file: UploadFile,
+        upload: PreparedUpload,
     ) -> InterviewDocument:
         
-        stored_document = self._storage_provider.store(file)
+        stored_document = self._storage_provider.store(upload)
         
         
         understanding = self._document_understanding_service.understand_document(

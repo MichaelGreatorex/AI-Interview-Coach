@@ -12,9 +12,10 @@ from app.services.document_upload_validator import DocumentUploadValidator
 from app.services.models.interview_document_processing_result import InterviewDocumentProcessingResult
 from app.services.models.interview_start_result import InterviewStartResult
 
+from app.storage.upload_preparer import UploadPreparer
+
 from app.schemas.submit_interview_response_response import SubmitInterviewResponseResponse
 from app.schemas.submit_interview_response_request import SubmitInterviewResponseRequest
-
 
 class InterviewWorkflowService:
 
@@ -25,12 +26,14 @@ class InterviewWorkflowService:
         response_service: InterviewResponseService,
         interview_engine: InterviewEngine,
         document_upload_validator: DocumentUploadValidator,
+        upload_preparer: UploadPreparer,
     ) -> None:
         self._session_service = session_service
         self._document_service = document_service
         self._response_service = response_service
         self._interview_engine = interview_engine
         self._document_upload_validator = document_upload_validator
+        self._upload_preparer = upload_preparer
 
     def process_documents(
         self,
@@ -38,22 +41,27 @@ class InterviewWorkflowService:
         job_description_file: UploadFile,
     ) -> InterviewDocumentProcessingResult:
 
-        self._document_upload_validator.validate(cv_file)
-        self._document_upload_validator.validate(job_description_file)
+        cv_upload = self._upload_preparer.prepare(cv_file)
+        job_description_upload = self._upload_preparer.prepare(
+            job_description_file,
+        )
+
+        self._document_upload_validator.validate(cv_upload)
+        self._document_upload_validator.validate(job_description_upload)
 
         session = self._session_service.create_session()
 
         cv_document = self._document_service.upload_document_for_session(
             session=session,
             document_type=DocumentType.CV,
-            file=cv_file,
+            upload=cv_upload,
         )
 
         job_description_document = (
             self._document_service.upload_document_for_session(
                 session=session,
                 document_type=DocumentType.JOB_DESCRIPTION,
-                file=job_description_file,
+                upload=job_description_upload,
             )
         )
 

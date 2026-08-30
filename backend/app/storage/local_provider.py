@@ -1,11 +1,9 @@
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import UploadFile
-
-from app.core.config import BACKEND_DIR, settings
-from app.storage.exceptions import FileTooLargeError
+from app.core.config import BACKEND_DIR
 from app.storage.models import StoredFile
+from app.storage.prepared_upload import PreparedUpload
 from app.storage.provider import StorageProvider
 
 
@@ -18,40 +16,31 @@ class LocalStorageProvider(StorageProvider):
             or (BACKEND_DIR / "storage" / "uploads")
         )
 
-    def store(self, file: UploadFile) -> StoredFile:
+    def store(self, upload: PreparedUpload) -> StoredFile:
         self._uploads_dir.mkdir(
             parents=True,
             exist_ok=True,
         )
 
-        original_filename = file.filename or "upload"
-
-        file.file.seek(0)
-        content = file.file.read()
-
-        if len(content) > settings.max_upload_size_bytes:
-            raise FileTooLargeError(
-                "File exceeds maximum allowed size of "
-                f"{settings.max_upload_size_bytes} bytes"
-            )
-
         extension = "".join(
-            Path(original_filename).suffixes
+            Path(upload.filename).suffixes
         )
 
         stored_filename = f"{uuid4()}{extension}"
         destination_path = self._uploads_dir / stored_filename
 
         with destination_path.open("wb") as output:
-            output.write(content)
+            output.write(upload.content)
 
         return StoredFile(
-            original_filename=original_filename,
+            original_filename=upload.filename,
             stored_filename=stored_filename,
             storage_path=str(destination_path),
-            mime_type=file.content_type
-            or "application/octet-stream",
-            file_size=len(content),
+            mime_type=(
+                upload.content_type
+                or "application/octet-stream"
+            ),
+            file_size=upload.file_size,
         )
 
     def delete(self, stored_file: StoredFile) -> None:

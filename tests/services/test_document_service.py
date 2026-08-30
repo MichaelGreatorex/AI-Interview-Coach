@@ -1,23 +1,29 @@
-from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock, call
 
 import pytest
-from fastapi import UploadFile
 
-from app.ai.models import AiDocumentType, AiDocumentUnderstandingResult
+from app.ai.models import (
+    AiDocumentType,
+    AiDocumentUnderstandingResult,
+)
 from app.models.enums import DocumentType
 from app.models.interview_document import InterviewDocument
 from app.models.interview_session import InterviewSession, InterviewStatus
 from app.services.document_service import DocumentService
 from app.storage.models import StoredFile
+from app.storage.prepared_upload import PreparedUpload
 
 
-def create_upload_file(filename: str = "cv.pdf") -> UploadFile:
-    return UploadFile(
+def create_prepared_upload(
+    filename: str = "cv.pdf",
+    content: bytes = b"file content",
+    content_type: str | None = "application/pdf",
+) -> PreparedUpload:
+    return PreparedUpload(
         filename=filename,
-        file=BytesIO(b"file content"),
-        headers={"content-type": "application/pdf"},
+        content=content,
+        content_type=content_type,
     )
 
 
@@ -44,6 +50,8 @@ def test_upload_document_raises_when_session_is_missing() -> None:
         document_understanding_service=document_understanding_service,
     )
 
+    upload = create_prepared_upload()
+
     with pytest.raises(
         ValueError,
         match="Interview session 'missing-session' does not exist",
@@ -51,7 +59,7 @@ def test_upload_document_raises_when_session_is_missing() -> None:
         service.upload_document(
             interview_session_id="missing-session",
             document_type=DocumentType.CV,
-            file=create_upload_file(),
+            upload=upload,
         )
 
     storage_provider.store.assert_not_called()
@@ -65,7 +73,7 @@ def test_upload_document_for_session_stores_file_and_persists_metadata() -> None
     storage_provider = Mock()
     document_understanding_service = Mock()
 
-    upload = create_upload_file()
+    upload = create_prepared_upload()
     session = create_session()
 
     storage_provider.store.return_value = StoredFile(
@@ -97,7 +105,7 @@ def test_upload_document_for_session_stores_file_and_persists_metadata() -> None
     created = service.upload_document_for_session(
         session=session,
         document_type=DocumentType.CV,
-        file=upload,
+        upload=upload,
     )
 
     storage_provider.store.assert_called_once_with(upload)
@@ -178,14 +186,19 @@ def test_delete_documents_for_session_deletes_files_and_records() -> None:
         call(documents[0]),
         call(documents[1]),
     ]
-    
-def test_upload_document_preserves_ai_identified_document_type(tmp_path: Path,) -> None:
+
+
+def test_upload_document_preserves_ai_identified_document_type() -> None:
     session_repository = Mock()
     document_repository = Mock()
     storage_provider = Mock()
     document_understanding_service = Mock()
 
     session = create_session()
+
+    upload = create_prepared_upload(
+        filename="wrongly-uploaded.pdf",
+    )
 
     storage_provider.store.return_value = StoredFile(
         original_filename="wrongly-uploaded.pdf",
@@ -216,8 +229,10 @@ def test_upload_document_preserves_ai_identified_document_type(tmp_path: Path,) 
     created = service.upload_document_for_session(
         session=session,
         document_type=DocumentType.CV,
-        file=create_upload_file("wrongly-uploaded.pdf"),
+        upload=upload,
     )
+
+    storage_provider.store.assert_called_once_with(upload)
 
     assert created.extracted_text == (
         "Senior Software Engineer\n\nRequirements..."
